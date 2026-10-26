@@ -4,11 +4,11 @@ import { describe, expect, it } from "vitest";
 
 const root = process.cwd();
 const fundingSql = readFileSync(
-  path.join(root, "supabase/migrations/20261014043338_phase1_funding_requests.sql"),
+  path.join(root, "docs/legacy-supabase-sql/20261014043338_phase1_funding_requests.sql"),
   "utf8",
 );
 const engineSql = readFileSync(
-  path.join(root, "supabase/migrations/20261016090000_server_side_paper_engine.sql"),
+  path.join(root, "docs/legacy-supabase-sql/20261016090000_server_side_paper_engine.sql"),
   "utf8",
 );
 const apiSource = readFileSync(path.join(root, "backend/src/api.ts"), "utf8");

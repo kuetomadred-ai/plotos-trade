@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 const root = process.cwd();
 const paymentSource = readFileSync(path.join(root, "src/lib/nowpayments.server.ts"), "utf8");
 const hardeningSql = readFileSync(
-  path.join(root, "supabase/migrations/20261026170000_security_hardening.sql"),
+  path.join(root, "docs/legacy-supabase-sql/20261026170000_security_hardening.sql"),
   "utf8",
 );
 const envExample = readFileSync(path.join(root, ".env.example"), "utf8");

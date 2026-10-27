@@ -1,1 +1,2 @@
-fatal: path 'drizzle/migrations/0002_apply_imported_schema.sql' exists on disk, but not in the index
+-- The content of this migration cannot be applied: its original SQL was lost during import; the imported schema already exists in the database.
+SELECT 1;

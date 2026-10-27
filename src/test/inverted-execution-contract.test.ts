@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 const root = process.cwd();
 const migration = readFileSync(
-  path.join(root, "supabase/migrations/20261026210000_inverted_execution_and_spread_bonus.sql"),
+  path.join(root, "docs/legacy-supabase-sql/20261026210000_inverted_execution_and_spread_bonus.sql"),
   "utf8",
 );
 const page = readFileSync(path.join(root, "public/plotos/index.html"), "utf8");

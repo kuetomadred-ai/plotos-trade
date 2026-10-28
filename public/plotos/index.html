@@ -1255,8 +1255,23 @@ function applyBiquoteQuote(tick,fromStream){
 function applyBiquoteTick(tick){
 	if(!applyBiquoteQuote(tick,true))return;
 	if(FEEDS.biquote.state!=='live'){FEEDS.biquote.state='live';FEEDS.biquote.error=''}
- chartTick(String(tick.symbol||'').toUpperCase(),tick);checkAlerts();feedPaint()
+ var sym=String(tick.symbol||'').toUpperCase();
+ chartTick(sym,tick);checkAlerts();feedPaint();instantRiskCheck(sym)
 }
+// Instant SL/TP on every live tick (no timer delay). Server positions close via the engine at once;
+// the cloud cron remains the authority while the app is closed.
+var RISK_INFLIGHT={};
+function instantRiskCheck(sym){try{
+ if(!user())return;
+ if(useLocal()){engineTick();return}
+ if(!cloudReady())return;var q=qt(sym);if(!q)return;
+ DB.accounts.forEach(function(a){accPositions(a).forEach(function(p){
+  if(p.symbol!==sym||RISK_INFLIGHT[p.id])return;
+  var hitSL=p.sl&&(p.side==='buy'?q.ask<=p.sl:q.bid>=p.sl),hitTP=p.tp&&(p.side==='buy'?q.ask>=p.tp:q.bid<=p.tp);
+  if(!hitSL&&!hitTP)return;RISK_INFLIGHT[p.id]=1;
+  TradingProvider.close(p,hitSL?'sl':'tp').then(function(ok){if(ok){toast((hitSL?'Stop loss':'Take profit')+' hit — '+p.symbol,hitSL?'dn':'');renderStrip();chartDrawLines();chartDrawMarkers()}})
+   .finally(function(){setTimeout(function(){delete RISK_INFLIGHT[p.id]},3000)})})})
+}catch(e){}}
 function handleBiquoteStream(state,detail){
  FEEDS.biquote.state=state;FEEDS.biquote.error=state==='error'?String(detail&&detail.message||detail||'Biquote stream error'):'';
  if(state==='live')FEEDS.biquote.last=Date.now();

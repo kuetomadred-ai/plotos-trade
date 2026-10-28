@@ -1463,7 +1463,7 @@ function engineTick(){
    if(p.ts>0){var S=SYMBOLS[p.symbol],dist=p.ts*S.pip;
     if(p.side==='buy'&&(q.bid-p.entry)>dist){var ns=+(q.bid-dist).toFixed(S.digits);if(!p.sl||ns>p.sl){p.sl=ns;a._tsUpd=true}}
     if(p.side==='sell'&&(p.entry-q.ask)>dist){var ns2=+(q.ask+dist).toFixed(S.digits);if(!p.sl||ns2<p.sl){p.sl=ns2;a._tsUpd=true}}}
-   var m=midPrice(q);if(holdLeftSec(p)>0)return;
+   var m=midPrice(q);
    if(p.sl&&(p.side==='buy'?m<=p.sl:m>=p.sl)){closePosition(p,p.sl,'sl');audit('engine','SL Hit',p.symbol,'');return}
    if(p.tp&&(p.side==='buy'?m>=p.tp:m<=p.tp)){closePosition(p,p.tp,'tp');audit('engine','TP Hit',p.symbol,'')}});
   if(a._tsUpd){a._tsUpd=false;if(view==='charts'){renderStrip();chartDrawLines()}save()}
@@ -1496,6 +1496,9 @@ function engineTick(){
    var M=accMetrics(a);
    if(M.profitPct>=ch2.profitPct&&a.days.length>=ch2.minDays)passCh(a)}
  }catch(e){}})}
+// Local paper trades only: server accounts are risk-managed by the cloud monitor.
+setInterval(function(){if(!user()||!useLocal())return;try{engineTick()}catch(e){}},1000);
+setInterval(function(){if(user()&&!useLocal())engineRefresh()},5000);
 function failCh(a,why){var ch=a.ch;ch.status='FAILED';ch.failWhy=why;
  a.riskLock=why;
  closeAll(a,'admin');audit('engine','Risk Violation','account '+a.login,why);

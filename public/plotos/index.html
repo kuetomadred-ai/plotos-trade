@@ -1605,7 +1605,7 @@ var TradingProvider={
 	 cancelOrder:function(o){if(!cloudReady())return Promise.resolve(false);return engineRequest('/v1/orders/'+encodeURIComponent(o.id)+'/cancel',{}).then(function(){return engineRefresh()}).catch(function(e){toast(e.message||'Order cancellation failed','dn');return false})}
 };
 function localReady(){return DEMO_MODE||(CLOUD.ok&&CLOUD.hydrated)}
-function useLocal(){return !ENGINE.base}
+function useLocal(){return !ENGINE.base||!cloudReady()}
 var LocalProvider={
  name:'PLUTUS Local Paper',
  getSymbols:function(){return SYIDS},

@@ -1,0 +1,12 @@
+# Disabled: background SL/TP runs on the Lovable Cloud schedule (every minute).
+# Kept as a manual-only no-op so the old scheduled version can never run again.
+name: Background Trade Monitor (disabled)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  noop:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Disabled - handled by Lovable Cloud schedule"

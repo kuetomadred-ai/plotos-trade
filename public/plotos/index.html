@@ -9,6 +9,8 @@
 <link rel="icon" type="image/png" href="./assets/mt5-app-icon.png">
 <link rel="apple-touch-icon" href="./assets/mt5-app-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<link rel="preconnect" href="https://biquote.io" crossorigin>
+<link rel="preload" href="./vendor/lightweight-charts.js" as="script">
 <script src="./engine-config.js"></script>
 <script src="./engine-client.js"></script>
 <script src="./vendor/signalr.min.js"></script>
@@ -296,7 +298,7 @@ input,select,textarea{font-family:inherit;color:var(--tx)}
 .err{background:var(--dnbg);border:1px solid rgba(234,57,67,.4);color:var(--dn);font-size:12px;border-radius:8px;padding:9px 12px;margin-bottom:12px;display:none}
 #shellMain{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;background:var(--bg)}
 #shellMain.noScroll{overflow:hidden}
-.screen{display:none;animation:slideIn .18s cubic-bezier(.23,1,.32,1)}.screen.on{display:block}
+.screen{display:none;contain:content}.screen.on{display:block}
 #v-charts.on{display:flex;flex-direction:column;height:100%;overflow:hidden;background:#000}
 html[data-theme="light"] #v-charts.on{background:#fff}
 @keyframes slideIn{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:translateX(0)}}
@@ -2532,7 +2534,7 @@ function navGo(v){view=v;var app=$('#app');if(app)app.classList.toggle('chartMod
  var el=$('#v-'+v);if(el)el.classList.add('on');
  $('#shellMain').classList.toggle('noScroll',v==='charts');
  $$('#bnav button').forEach(function(b){var active=b.getAttribute('data-v')===v;b.classList.toggle('on',active);if(active)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
- if(v!=='charts'&&window.matchMedia&&window.matchMedia('(max-width:959px)').matches){try{$('#shellMain').scrollTo({top:0,behavior:'smooth'})}catch(e){$('#shellMain').scrollTop=0}}
+ if(v!=='charts'&&window.matchMedia&&window.matchMedia('(max-width:959px)').matches){$('#shellMain').scrollTop=0}
  renderView()}
 window.navGo=navGo;
 function renderView(){var u=user();
@@ -4032,7 +4034,7 @@ function pipHTML(v,d){if(!(v>0))return'—';var s=pxf(v,d),n=d>=3?2:1;
  applyTheme();applyLang();
  if(DB.settings.lastSym&&SYMBOLS[DB.settings.lastSym])termSym=DB.settings.lastSym;
  if(DB.settings.lastTf&&TFSEC[DB.settings.lastTf])chart.tf=DB.settings.lastTf;
- startFeeds();
+ startFeeds();ensureChartLib();
  if(PREVIEW_DEMO){enterDemo()}
  else{
  cloudInit().then(function(){return seed()}).then(function(){
@@ -4048,7 +4050,6 @@ function pipHTML(v,d){if(!(v>0))return'—';var s=pxf(v,d),n=d>=3?2:1;
   renderAuth()
  });
  }
- ensureChartLib();
  (function(){var sx,sy,st,n=0;document.addEventListener('pointerdown',function(e){var el=document.getElementById('chartEl');if(!el||!el.contains(e.target)){st=0;return}n++;sx=e.clientX;sy=e.clientY;st=Date.now()},true);document.addEventListener('pointerup',function(e){var go=st&&Date.now()-st<260&&Math.abs(e.clientX-sx)<8&&Math.abs(e.clientY-sy)<8;st=0;if(go){var tn=Date.now();if(!(window._lt&&tn-window._lt<340&&Math.abs(e.clientX-window._lx)<24&&Math.abs(e.clientY-window._ly)<24)){window._lt=tn;window._lx=e.clientX;window._ly=e.clientY;return}window._lt=0}if(!go||chart.dtOn||chart.crosshair)return;var C=DB.settings.chart||{};if(C.radialTap===false)return;if(document.querySelector('#ovl')&&getComputedStyle(document.querySelector('#ovl')).display!=='none')return;setTimeout(function(){if(DSEL&&DSEL.idx>=0)return;tfModal()},30)},true)})();
 })();
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {

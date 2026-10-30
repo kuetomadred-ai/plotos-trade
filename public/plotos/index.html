@@ -482,6 +482,17 @@ html[data-theme="light"] .drow .dots{border-color:#B9C2D4}
 .filters{display:flex;gap:6px;padding:0 14px 8px;flex-wrap:wrap}
 .filters button{font-size:11px;color:var(--mut);border:1px solid var(--ln);border-radius:7px;padding:5px 12px}
 .filters button.on{color:var(--ac);border-color:var(--ac)}
+.hsHead{display:flex;align-items:center;gap:6px;padding:8px 10px 6px}.hsTitle{display:flex;flex-direction:column;line-height:1.15;margin-left:6px}.hsTitle small{font-size:13px;color:var(--tx)}.hsTitle b{font-size:17px;font-weight:400;color:var(--mut)}
+.hsBtn{background:none;border:0;color:var(--tx);padding:6px 8px;cursor:pointer}
+.hsTabs{display:flex}.hsTabs button{flex:1;background:none;border:0;border-bottom:2px solid transparent;color:var(--mut);padding:14px 0 12px;font-size:14px;letter-spacing:.3px}.hsTabs button.on{color:var(--tx);border-bottom-color:#3d7bf0}
+.hsSumBox{padding:8px 14px 6px;border-bottom:1px solid var(--ln)}.hsSum{display:flex;align-items:baseline;gap:6px;font-size:15px;padding:3px 0}.hsSum span{font-weight:600;color:var(--tx)}.hsSum i{flex:1;border-bottom:2px dotted var(--ln);transform:translateY(-3px)}.hsSum b{font-weight:500}.hsSum b.dn{color:#ef4f4f}
+.hsRow{border-bottom:1px solid var(--ln);padding:8px 14px 8px 12px;border-left:5px solid transparent;cursor:pointer}.hsRow.w{border-left-color:#2fbf4a}.hsRow.l{border-left-color:#f07f1e}
+.hsRow .r1,.hsRow .r2{display:flex;justify-content:space-between;align-items:baseline}.hsRow .r1 b{font-size:15px}.hsRow i{font-style:normal;font-size:15px}.hsRow i.sell{color:#ef4f4f}.hsRow i.buy{color:#3d7bf0}
+.hsRow em{font-style:normal;color:var(--mut);font-size:13px}.hsRow .r2 span{color:var(--mut);font-size:15px;font-weight:600}.hsRow .r2 b{font-size:14px;font-weight:600}.hsRow .r2 b.up{color:#3d7bf0}.hsRow .r2 b.dn{color:#ef4f4f}.hsRow .st{text-transform:lowercase}
+.hsEmpty{display:flex;flex-direction:column;align-items:center;gap:22px;padding-top:28vh;color:var(--ln)}.hsEmpty span{color:var(--mut);font-size:15px}
+.hsPopWrap{position:fixed;inset:0;z-index:9999}.hsPop{position:absolute;background:#2a2c30;border-radius:14px;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,.5)}
+.hsPi{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;border-bottom:1px solid rgba(255,255,255,.07);padding:10px 14px;color:#eee;text-align:left;cursor:pointer}.hsPi.s{padding:13px 18px}.hsPi:last-child{border-bottom:0}
+.hsIc{color:#cfd2d6;display:flex}.hsTx{flex:1;display:flex;flex-direction:column}.hsTx b{font-size:16px;font-weight:500}.hsTx small{font-size:13px;color:#9a9da3;margin-top:2px}.hsChk{font-style:normal;color:#3d7bf0;font-size:20px}
 .hrow{padding:10px 14px;border-bottom:1px solid var(--ln);cursor:pointer}
 .hrow .l1{display:flex;gap:8px;align-items:center;font-size:11.5px}
 .hrow .l1 .t{margin-left:auto;font-size:9.5px;color:var(--dim)}
@@ -3060,56 +3071,63 @@ function renderDash(){var el=$('#v-dash'),a=myAcc();
  '<div class="dsh-sec"><h5>RECENT TRADES</h5>'+(deals.length?deals.slice(0,15).map(function(x){return'<div class="dsh-li"><span>'+esc(x.symbol)+' '+esc(String(x.side).toUpperCase())+' '+(+x.lots).toFixed(2)+'</span><b style="color:'+col(x.pnl)+'">'+(x.pnl>=0?'+':'')+(+x.pnl).toFixed(2)+'</b></div>'}).join(''):'<div class="empty" style="padding:8px">No closed trades yet</div>')+'</div>'+
  '</div>';
  el.innerHTML=h;$('#dAcc').onclick=accountsModal}
+var HS={sym:'all',sort:'close',dir:-1,per:'3m',from:0,to:0};
+function hsRange(){var d=new Date();d.setHours(0,0,0,0);var t0=d.getTime(),end=Date.now()+864e5,day=864e5;
+ if(HS.per==='today')return[t0,end];if(HS.per==='week')return[t0-7*day,end];if(HS.per==='month')return[t0-30*day,end];if(HS.per==='3m')return[t0-92*day,end];
+ return[HS.from||t0,(HS.to||t0)+day]}
+function hsFmtD(t){var d=new Date(t);return(d.getMonth()+1)+'/'+d.getDate()+'/'+String(d.getFullYear()).slice(2)}
+function hsTs(t){var d=new Date(t),p=function(n){return String(n).padStart(2,'0')};return d.getFullYear()+'.'+p(d.getMonth()+1)+'.'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds())}
+function hsNum(v,dg){var s=(+v||0).toFixed(dg==null?2:dg),neg=s[0]==='-';if(neg)s=s.slice(1);var p=s.split('.');p[0]=p[0].replace(/\B(?=(\d{3})+(?!\d))/g,' ');return(neg?'-':'')+p.join('.')}
+function hsPop(anchor,html,bind){var o=document.getElementById('hsPop');if(o)o.remove();var w=document.createElement('div');w.id='hsPop';w.className='hsPopWrap';w.innerHTML='<div class="hsPop" style="'+anchor+'">'+html+'</div>';document.body.appendChild(w);w.onclick=function(e){if(e.target===w)w.remove()};bind(w)}
+function hsCal(n){return'<svg viewBox="0 0 24 24" width="26" height="26"><rect x="3" y="5" width="18" height="16" rx="2" fill="currentColor"/><rect x="7" y="2.5" width="2" height="4" rx="1" fill="currentColor"/><rect x="15" y="2.5" width="2" height="4" rx="1" fill="currentColor"/><rect x="5" y="9" width="14" height="10" fill="var(--bg)"/>'+(n?'<text x="12" y="17.5" text-anchor="middle" font-size="9" font-weight="700" fill="currentColor">'+n+'</text>':'<g fill="currentColor"><rect x="7" y="11" width="2" height="2"/><rect x="11" y="11" width="2" height="2"/><rect x="15" y="11" width="2" height="2"/><rect x="7" y="15" width="2" height="2"/><rect x="11" y="15" width="2" height="2"/><rect x="15" y="15" width="2" height="2"/></g>')+'</svg>'}
+function hsPeriodMenu(){var d=new Date(),day=864e5,n=d.getTime(),t=hsFmtD(n);
+ var rows=[['today','Today',t,''],['week','Last week',hsFmtD(n-7*day)+' - '+t,''],['month','Last month',hsFmtD(n-30*day)+' - '+t,''],['3m','Last 3 months',hsFmtD(n-92*day)+' - '+t,'3'],['custom','Custom period',HS.from?hsFmtD(HS.from)+' - '+hsFmtD(HS.to):t+' - '+t,'👤']];
+ hsPop('top:62px;right:12px;width:62%',rows.map(function(r){return'<button class="hsPi" data-per="'+r[0]+'"><span class="hsIc">'+hsCal(r[3]==='👤'?'':r[3])+'</span><span class="hsTx"><b>'+r[1]+'</b><small>'+r[2]+'</small></span>'+(HS.per===r[0]?'<i class="hsChk">✓</i>':'')+'</button>'}).join(''),function(w){
+  w.querySelectorAll('[data-per]').forEach(function(b){b.onclick=function(){var p=b.dataset.per;w.remove();
+   if(p==='custom'){modal('<h3 style="margin:0 0 12px">Custom period</h3><div class="fld"><label>From</label><input type="date" id="hsF"></div><div class="fld"><label>To</label><input type="date" id="hsT"></div><button class="btn" id="hsOk">Apply</button>');$('#hsOk').onclick=function(){var f=Date.parse($('#hsF').value),to=Date.parse($('#hsT').value);if(!f||!to)return;HS.per='custom';HS.from=f;HS.to=to;closeModal();renderHist()};return}
+   HS.per=p;renderHist()}})})}
+function hsSortMenu(){var rows=[['symbol','Symbol'],['ticket','Ticket'],['type','Type'],['volume','Volume'],['open','Open time'],['close','Close time'],['profit','Profit']];
+ hsPop('top:62px;right:100px;width:46%',rows.map(function(r){return'<button class="hsPi s" data-so="'+r[0]+'"><span class="hsTx"><b>'+r[1]+'</b></span>'+(HS.sort===r[0]?'<i class="hsChk">'+(HS.dir<0?'↓':'↑')+'</i>':'')+'</button>'}).join(''),function(w){
+  w.querySelectorAll('[data-so]').forEach(function(b){b.onclick=function(){var s=b.dataset.so;if(HS.sort===s)HS.dir=-HS.dir;else{HS.sort=s;HS.dir=-1}w.remove();renderHist()}})})}
+function hsSymMenu(){var a=myAcc(),seen={};(DB.history||[]).forEach(function(h){if(!a||h.accId===a.id)seen[h.symbol]=1});var list=['all'].concat(Object.keys(seen),SYIDS.filter(function(s){return!seen[s]}));
+ hsPop('top:62px;left:38%;width:32%;max-height:80vh;overflow:auto',list.map(function(s){return'<button class="hsPi s" data-sy="'+s+'"><span class="hsTx"><b>'+(s==='all'?'All symbols':s)+'</b></span></button>'}).join(''),function(w){
+  w.querySelectorAll('[data-sy]').forEach(function(b){b.onclick=function(){HS.sym=b.dataset.sy;w.remove();renderHist()}})})}
+function hsSorted(list,get){var k=HS.sort,d=HS.dir;return list.slice().sort(function(x,y){var a=get(x,k),b=get(y,k);return(a>b?1:a<b?-1:0)*d})}
 function renderHist(){var el=$('#v-hist'),a=myAcc();
- var html='<div class="phead">'+
- '<button class="pib" onclick="openDrawer()">'+menuSvg()+'</button><b>History</b><span class="sp"></span>'+
- '<button class="pib" id="hAcc" title="Switch account">'+accSvg()+'</button>'+
- '<button class="pib" id="hsCsv" title="Export CSV" style="color:var(--ac)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg></button></div>';
- if(!a){el.innerHTML=html+'<div class="na-card"><h3>No trading account</h3><p>Request a challenge in the Prop tab.</p><button class="btn sm" style="margin:10px auto 0;max-width:220px" onclick="navGo(\'prop\')">Go to Prop →</button></div>';return}
- html+='<div class="atabbar" style="padding:10px 14px">'+
- [['positions','POSITIONS'],['orders','ORDERS'],['deals','DEALS']].map(function(t){
-  return'<button class="'+(histTab===t[0]?'on':'')+'" data-ht="'+t[0]+'">'+t[1]+'</button>'}).join('')+'</div>'+
- '<div id="histBody"></div>';
- el.innerHTML=html;
- $('#hAcc').onclick=accountsModal;
- $('#hsCsv').onclick=exportCSV;
+ var icon=function(p){return'<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+p+'</svg>'};
+ var html='<div class="hsHead"><button class="pib" onclick="openDrawer()">'+menuSvg()+'</button><div class="hsTitle"><small>History</small><b>'+(HS.sym==='all'?'All symbols':esc(HS.sym))+'</b></div><span class="sp"></span>'+
+ '<button class="hsBtn" id="hsSym">'+icon('<path d="M19 9a7.5 7.5 0 00-13.5-2M5 4v3h3M5 15a7.5 7.5 0 0013.5 2M19 20v-3h-3"/><path d="M14 9.5c-.5-.8-1.3-1-2-1-1.2 0-2 .6-2 1.5 0 2 4 1 4 3 0 1-.9 1.5-2 1.5-.8 0-1.6-.3-2-1M12 7v1.5M12 14.5V16"/>')+'</button>'+
+ '<button class="hsBtn" id="hsSort">'+icon('<path d="M8 4v16M4 16l4 4 4-4M16 20V4M12 8l4-4 4 4"/>')+'</button>'+
+ '<button class="hsBtn" id="hsPer">'+hsCal(HS.per==='3m'?'3':'')+'</button></div>';
+ if(!a){el.innerHTML=html+hsEmpty();bindHs();return}
+ html+='<div class="hsTabs">'+[['positions','POSITIONS'],['orders','ORDERS'],['deals','DEALS']].map(function(t){return'<button class="'+(histTab===t[0]?'on':'')+'" data-ht="'+t[0]+'">'+t[1]+'</button>'}).join('')+'</div><div id="histBody"></div>';
+ el.innerHTML=html;bindHs();
  $$('#v-hist [data-ht]').forEach(function(b){b.onclick=function(){histTab=b.getAttribute('data-ht');renderHist()}});
  paintHistBody(a)}
+function bindHs(){var s=$('#hsSym'),o=$('#hsSort'),p=$('#hsPer');if(s)s.onclick=hsSymMenu;if(o)o.onclick=hsSortMenu;if(p)p.onclick=hsPeriodMenu}
+function hsEmpty(){return'<div class="hsEmpty"><svg viewBox="0 0 64 64" width="130" height="130"><path d="M14 6h36l8 22v28a4 4 0 01-4 4H10a4 4 0 01-4-4V28z" fill="currentColor"/><path d="M17 10h30l7 18H40a8 8 0 01-16 0H10z" fill="var(--bg)"/></svg><span>Empty history</span></div>'}
 function paintHistBody(a){
- var B=$('#histBody');if(!B)return;
- if(histTab==='positions'){
-  var pos=accPositions(a);
-  B.innerHTML=pos.length?pos.map(posRow).join(''):'<div class="empty">No open positions</div>';
-  bindPosButtons(B);return}
+ var B=$('#histBody');if(!B)return;var R=hsRange(),inR=function(t){return t>=R[0]&&t<R[1]},symOk=function(s){return HS.sym==='all'||s===HS.sym};
+ var hist=DB.history.filter(function(x){return x.accId===a.id&&symOk(x.symbol)&&inR(x.closedAt||0)});
+ var dg=function(s){return(SYMBOLS[s]||{digits:5}).digits};
+ var tk=function(id){var n=0,s=String(id);for(var i=0;i<s.length;i++)n=(n*31+s.charCodeAt(i))>>>0;return n%900000000+100000000};
  if(histTab==='orders'){
-  var ords=accOrders(a);
-  B.innerHTML=ords.length?ords.map(ordRow).join(''):'<div class="empty">No pending orders</div>';
-  bindPosButtons(B);return}
- var deals=DB.history.filter(function(x){return x.accId===a.id});
- var profit=0,comm=0;
- deals.forEach(function(x){profit+=x.pnl+(x.comm||0);comm+=(x.comm||0)});
- var swap=a.swapTotal||0;
- var html='<div class="pad" style="padding-top:6px">'+
-  '<div class="drow"><span class="lbl">Profit:</span><span class="dots"></span><b style="color:'+(profit>=0?'var(--up)':'var(--dn)')+'">'+(profit>=0?'+':'')+profit.toFixed(2)+'</b></div>'+
-  '<div class="drow"><span class="lbl">Deposit:</span><span class="dots"></span><b>'+money(a.size)+'</b></div>'+
-  '<div class="drow"><span class="lbl">Withdrawal:</span><span class="dots"></span><b>'+money(a.paidTotal||0)+'</b></div>'+
-  '<div class="drow"><span class="lbl">Swap:</span><span class="dots"></span><b style="color:'+(swap<0?'var(--dn)':'var(--tx)')+'">'+swap.toFixed(2)+'</b></div>'+
-  '<div class="drow"><span class="lbl">Commission:</span><span class="dots"></span><b style="color:var(--dn)">-'+comm.toFixed(2)+'</b></div>'+
-  '<div class="drow"><span class="lbl">Balance:</span><span class="dots"></span><b style="color:var(--ac)">'+money(a.balance)+'</b></div></div>';
- if(!deals.length){B.innerHTML=html+'<div class="empty">No closed deals yet</div>';return}
- html+=deals.slice(0,200).map(function(x){var S=SYMBOLS[x.symbol];
-  return'<div class="hrow" data-hid="'+x.id+'"><div class="l1">'+
-  '<b style="font-size:10px;color:'+(x.side==='buy'?'var(--ac)':'var(--dn)')+'">'+(x.side==='buy'?'BUY':'SELL')+'</b>'+
-  '<b>'+x.symbol+'</b>'+
-  '<span class="mono" style="font-size:10px;color:var(--mut)">'+x.lots+' lot</span>'+
-  '<span class="t">'+new Date(x.closedAt).toLocaleString('en',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})+'</span></div>'+
-  '<div class="l2"><span>'+pxf(x.entry,S.digits)+' → '+pxf(x.exit,S.digits)+'</span>'+
-  '<span style="color:var(--dim)">'+(REASON[x.reason]||x.reason)+'</span>'+
-  '<span style="color:var(--dim)">⏱ '+fmtDur(x.closedAt-x.openedAt)+'</span>'+
-  '<span class="p '+(x.pnl>=0?'up':'dn')+'">'+(x.pnl>=0?'+':'')+x.pnl.toFixed(2)+'</span></div></div>'}).join('');
- B.innerHTML=html;
- $$('#histBody .hrow').forEach(function(r){r.onclick=function(){
-  var x=DB.history.find(function(h){return h.id===r.getAttribute('data-hid')});if(x)noteModal(x)}})}
+  var ords=DB.orders.filter(function(o){return o.accId===a.id&&symOk(o.symbol)&&inR(o.createdAt||0)}).map(function(o){return{sym:o.symbol,side:o.side,lots:o.lots,type:o.type,t:o.createdAt,px:o.price,st:o.state,id:o.id}});
+  hist.forEach(function(x){ords.push({sym:x.symbol,side:x.side,lots:x.lots,type:'market',t:x.openedAt,px:x.entry,st:'FILLED',id:x.id+'o'});ords.push({sym:x.symbol,side:x.side==='buy'?'sell':'buy',lots:x.lots,type:'market',t:x.closedAt,px:x.exit,st:'FILLED',id:x.id+'c'})});
+  ords=hsSorted(ords,function(o,k){return k==='symbol'?o.sym:k==='type'?o.side:k==='volume'?+o.lots:k==='ticket'?tk(o.id):k==='profit'?0:o.t});
+  if(!ords.length){B.innerHTML=hsEmpty();return}
+  B.innerHTML=ords.map(function(o){return'<div class="hsRow n"><div class="r1"><span><b>'+esc(o.sym)+',</b> <i class="'+o.side+'">'+o.side+' '+(+o.lots).toFixed(2)+'</i></span><em>'+hsTs(o.t)+'</em></div><div class="r2"><span>'+(o.px?hsNum(o.px,dg(o.sym)):'market')+'</span><em class="st">'+esc(String(o.st||'').toLowerCase())+'</em></div></div>'}).join('');return}
+ var profit=0,comm=0,swap=0;hist.forEach(function(x){profit+=(+x.pnl||0)+(x.comm||0);comm+=(x.comm||0)});swap=a.swapTotal||0;
+ var dot=function(l,v,c){return'<div class="hsSum"><span>'+l+'</span><i></i><b'+(c?' class="'+c+'"':'')+'>'+v+'</b></div>'};
+ var sum='<div class="hsSumBox">'+dot('Profit:',hsNum(profit),profit<0?'dn':'')+dot('Deposit',hsNum(a.size))+dot('Swap:',hsNum(swap))+dot('Commission:',hsNum(-comm))+dot('Balance:',hsNum(a.balance))+'</div>';
+ if(!hist.length){B.innerHTML=hsEmpty();return}
+ if(histTab==='deals'){
+  var deals=[];hist.forEach(function(x){deals.push({sym:x.symbol,side:x.side,lots:x.lots,px:x.entry,t:x.openedAt,pnl:0,dir:'in',id:x.id+'i'});deals.push({sym:x.symbol,side:x.side==='buy'?'sell':'buy',lots:x.lots,px:x.exit,t:x.closedAt,pnl:+x.pnl||0,dir:'out',id:x.id})});
+  deals=hsSorted(deals,function(o,k){return k==='symbol'?o.sym:k==='type'?o.side:k==='volume'?+o.lots:k==='ticket'?tk(o.id):k==='profit'?o.pnl:o.t});
+  B.innerHTML=sum+deals.map(function(d){return'<div class="hsRow n"><div class="r1"><span><b>'+esc(d.sym)+',</b> <i class="'+d.side+'">'+d.side+' '+d.dir+'</i></span><em>'+hsTs(d.t)+'</em></div><div class="r2"><span>'+(+d.lots).toFixed(2)+' at '+hsNum(d.px,dg(d.sym))+'</span><b class="'+(d.pnl<0?'dn':'up')+'">'+(d.dir==='in'?'':hsNum(d.pnl))+'</b></div></div>'}).join('');return}
+ var list=hsSorted(hist,function(x,k){return k==='symbol'?x.symbol:k==='type'?x.side:k==='volume'?+x.lots:k==='ticket'?tk(x.id):k==='profit'?+x.pnl:k==='open'?x.openedAt:x.closedAt});
+ B.innerHTML=sum+list.slice(0,300).map(function(x){var d=dg(x.symbol);return'<div class="hsRow '+(x.pnl>=0?'w':'l')+'" data-hid="'+x.id+'"><div class="r1"><span><b>'+esc(x.symbol)+',</b> <i class="'+x.side+'">'+x.side+' '+(+x.lots).toFixed(2)+'</i></span><em>'+hsTs(x.closedAt)+'</em></div><div class="r2"><span>'+hsNum(x.entry,d)+' → '+hsNum(x.exit,d)+'</span><b class="'+(x.pnl<0?'dn':'up')+'">'+hsNum(x.pnl)+'</b></div></div>'}).join('');
+ $$('#histBody .hsRow[data-hid]').forEach(function(r){r.onclick=function(){var x=DB.history.find(function(h){return h.id===r.getAttribute('data-hid')});if(x)noteModal(x)}})}
 
 /* QUOTES / MARKET WATCH */
 var mwQ='',mwCat='all';

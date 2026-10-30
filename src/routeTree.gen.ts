@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SplatRouteImport } from './routes/$'
 import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as DisclaimerRouteImport } from './routes/disclaimer'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as ApiPublicDemoRouteImport } from './routes/api/public/demo'
@@ -34,11 +33,6 @@ const SplatRoute = SplatRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DisclaimerRoute = DisclaimerRouteImport.update({
-  id: '/disclaimer',
-  path: '/disclaimer',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -84,7 +78,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
   '/dashboard': typeof DashboardRoute
-  '/disclaimer': typeof DisclaimerRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/api/public/demo': typeof ApiPublicDemoRoute
@@ -97,7 +90,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
   '/dashboard': typeof DashboardRoute
-  '/disclaimer': typeof DisclaimerRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/api/public/demo': typeof ApiPublicDemoRoute
@@ -111,7 +103,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
   '/dashboard': typeof DashboardRoute
-  '/disclaimer': typeof DisclaimerRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/api/public/demo': typeof ApiPublicDemoRoute
@@ -126,7 +117,6 @@ export interface FileRouteTypes {
     | '/'
     | '/$'
     | '/dashboard'
-    | '/disclaimer'
     | '/privacy'
     | '/terms'
     | '/api/public/demo'
@@ -139,7 +129,6 @@ export interface FileRouteTypes {
     | '/'
     | '/$'
     | '/dashboard'
-    | '/disclaimer'
     | '/privacy'
     | '/terms'
     | '/api/public/demo'
@@ -152,7 +141,6 @@ export interface FileRouteTypes {
     | '/'
     | '/$'
     | '/dashboard'
-    | '/disclaimer'
     | '/privacy'
     | '/terms'
     | '/api/public/demo'
@@ -166,7 +154,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SplatRoute: typeof SplatRoute
   DashboardRoute: typeof DashboardRoute
-  DisclaimerRoute: typeof DisclaimerRoute
   PrivacyRoute: typeof PrivacyRoute
   TermsRoute: typeof TermsRoute
   ApiPublicDemoRoute: typeof ApiPublicDemoRoute
@@ -197,13 +184,6 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/disclaimer': {
-      id: '/disclaimer'
-      path: '/disclaimer'
-      fullPath: '/disclaimer'
-      preLoaderRoute: typeof DisclaimerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -262,7 +242,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SplatRoute: SplatRoute,
   DashboardRoute: DashboardRoute,
-  DisclaimerRoute: DisclaimerRoute,
   PrivacyRoute: PrivacyRoute,
   TermsRoute: TermsRoute,
   ApiPublicDemoRoute: ApiPublicDemoRoute,

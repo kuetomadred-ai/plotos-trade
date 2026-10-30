@@ -4034,7 +4034,7 @@ function pipHTML(v,d){if(!(v>0))return'—';var s=pxf(v,d),n=d>=3?2:1;
  applyTheme();applyLang();
  if(DB.settings.lastSym&&SYMBOLS[DB.settings.lastSym])termSym=DB.settings.lastSym;
  if(DB.settings.lastTf&&TFSEC[DB.settings.lastTf])chart.tf=DB.settings.lastTf;
- startFeeds();ensureChartLib();
+ startFeeds();
  if(PREVIEW_DEMO){enterDemo()}
  else{
  cloudInit().then(function(){return seed()}).then(function(){
@@ -4050,6 +4050,7 @@ function pipHTML(v,d){if(!(v>0))return'—';var s=pxf(v,d),n=d>=3?2:1;
   renderAuth()
  });
  }
+ ensureChartLib();
  (function(){var sx,sy,st,n=0;document.addEventListener('pointerdown',function(e){var el=document.getElementById('chartEl');if(!el||!el.contains(e.target)){st=0;return}n++;sx=e.clientX;sy=e.clientY;st=Date.now()},true);document.addEventListener('pointerup',function(e){var go=st&&Date.now()-st<260&&Math.abs(e.clientX-sx)<8&&Math.abs(e.clientY-sy)<8;st=0;if(go){var tn=Date.now();if(!(window._lt&&tn-window._lt<340&&Math.abs(e.clientX-window._lx)<24&&Math.abs(e.clientY-window._ly)<24)){window._lt=tn;window._lx=e.clientX;window._ly=e.clientY;return}window._lt=0}if(!go||chart.dtOn||chart.crosshair)return;var C=DB.settings.chart||{};if(C.radialTap===false)return;if(document.querySelector('#ovl')&&getComputedStyle(document.querySelector('#ovl')).display!=='none')return;setTimeout(function(){if(DSEL&&DSEL.idx>=0)return;tfModal()},30)},true)})();
 })();
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {

@@ -1280,11 +1280,11 @@ function instantRiskCheck(sym){try{
  engineTick();
  if(!cloudReady())return;var q=qt(sym);if(!q)return;
  DB.accounts.forEach(function(a){accPositions(a).forEach(function(p){
-  if(p.symbol!==sym||RISK_INFLIGHT[p.id])return;
+  if(p.src!=='server'||p.symbol!==sym||RISK_INFLIGHT[sym])return;
   var hitSL=p.sl&&(p.side==='buy'?q.ask<=p.sl:q.bid>=p.sl),hitTP=p.tp&&(p.side==='buy'?q.ask>=p.tp:q.bid<=p.tp);
-  if(!hitSL&&!hitTP)return;RISK_INFLIGHT[p.id]=1;
-  engineRequest('/v1/risk/reconcile',{}).then(function(){return engineRefresh()}).then(function(ok){if(ok){renderStrip();chartDrawLines();chartDrawMarkers()}})
-   .finally(function(){setTimeout(function(){delete RISK_INFLIGHT[p.id]},3000)})})})
+  if(!hitSL&&!hitTP)return;RISK_INFLIGHT[sym]=1;
+  engineRequest('/v1/risk/check',{}).then(function(){return engineRefresh()}).then(function(ok){if(ok){renderStrip();chartDrawLines();chartDrawMarkers()}}).catch(function(){})
+   .finally(function(){delete RISK_INFLIGHT[sym]})})})
 }catch(e){}}
 function handleBiquoteStream(state,detail){
  FEEDS.biquote.state=state;FEEDS.biquote.error=state==='error'?String(detail&&detail.message||detail||'Biquote stream error'):'';

@@ -1,5 +1,8 @@
 # Roadmap
 
+- [ ] Add server candle reconciliation, recover missed SL/TP ranges on reconnect, and verify exact simulated threshold accounting.
+- [ ] Keep offline paper trading separate from server positions and preserve both across reconnects; never replay offline fills as live orders.
+
 - [x] Fix /index preview entry and open charts/prices directly in a safe demo; mobile/desktop charts, quotes, and timeframe switching verified; 50 tests pass.
 
 - [x] Match video: position action strip, SL/TP draft dragging, explicit modification sheet (mobile demo flow verified)

@@ -7,7 +7,7 @@ export const Route = createFileRoute('/api/public/jobs/monitor-trades')({
     if (failure) return failure
     try {
       const { refreshEngineQuotes } = await import('@/lib/engine-quotes.server')
-      return Response.json(await refreshEngineQuotes())
+      return Response.json(await refreshEngineQuotes(true))
     } catch {
       return Response.json({ error: 'Price monitoring unavailable' }, { status: 503 })
     }

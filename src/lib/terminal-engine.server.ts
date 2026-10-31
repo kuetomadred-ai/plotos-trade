@@ -41,6 +41,15 @@ export async function handleTerminalRequest(request: Request, path: string) {
     const text = await request.text()
     if (text.length > 16384) return reply({ error: 'Request too large' }, 413)
     const body: unknown = JSON.parse(text || '{}')
+    if (path === 'v1/risk/reconcile' || path === 'v1/risk/check') {
+      z.object({}).strict().parse(body)
+      const { data: positions, error } = await client.from('pf_engine_positions').select('symbol').eq('user_id', userId).eq('status', 'OPEN')
+      if (error) throw error
+      const { reconcileEngineProtection, refreshEngineQuotes } = await import('./engine-quotes.server')
+      const reconciliation = path === 'v1/risk/reconcile' ? await reconcileEngineProtection([...new Set((positions ?? []).map(p => p.symbol))]) : undefined
+      const quotes = await refreshEngineQuotes()
+      return reply({ ...quotes, reconciliation })
+    }
     let rpc: string, args: Record<string, unknown>
     if (path === 'v1/orders') {
       const x = orderSchema.parse(body)

@@ -14,4 +14,6 @@
 - The current Cloud Drizzle migration set is authoritative for the engine; historical Supabase SQL is reference-only, preventing duplicate schema paths.
 - Route terminal engine calls through same-origin `/api/public/engine/*` handlers that verify bearer identity; ordinary reads use the caller's RLS client and privileged RPC writes derive user identity server-side, so static clients never require a separate privileged server.
 - Run quote monitoring through the managed cron-authenticated callback, never through browser timers as the independent source of risk enforcement.
+- Reconcile only completed, post-entry/post-protection candles with a declared compatible bid/ask basis; record unknown basis and dual-hit ambiguity rather than invent historical fills or exact timestamps.
+- Isolate offline paper accounts from server-owned accounts, retain both on refresh, and never replay offline fills as server orders; this preserves continuity without falsifying server state.
 - Historical Supabase SQL lives in docs/legacy-supabase-sql/ (reference-only) so it is never replayed as a migration alongside the Drizzle set.

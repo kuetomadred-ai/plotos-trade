@@ -1020,8 +1020,9 @@ function engineRefresh(){
   });
   // Authenticated trading state is exclusively server-owned; discard local account caches.
   var srvIds={};accountIds.forEach(function(id){srvIds[id]=1});
-  var keepAcc=function(a){return a.userId!==u.id};
-  var keepRow=function(x){return x.userId!==u.id};
+  var localIds={};DB.accounts.forEach(function(a){if(a.userId===u.id&&!a.serverManaged)localIds[a.id]=1});
+  var keepAcc=function(a){return a.userId!==u.id||!!localIds[a.id]};
+  var keepRow=function(x){return x.userId!==u.id||!!localIds[x.accId]};
   DB.positions=DB.positions.filter(keepRow).concat(positions);
   DB.orders=DB.orders.filter(keepRow).concat(orders);
   DB.history=DB.history.filter(keepRow).concat(history);
@@ -1276,14 +1277,14 @@ function applyBiquoteTick(tick){
 var RISK_INFLIGHT={};
 function instantRiskCheck(sym){try{
  if(!user())return;
- if(useLocal()){engineTick();return}
+ engineTick();
  if(!cloudReady())return;var q=qt(sym);if(!q)return;
  DB.accounts.forEach(function(a){accPositions(a).forEach(function(p){
-  if(p.symbol!==sym||RISK_INFLIGHT[p.id])return;
+  if(p.src!=='server'||p.symbol!==sym||RISK_INFLIGHT[sym])return;
   var hitSL=p.sl&&(p.side==='buy'?q.ask<=p.sl:q.bid>=p.sl),hitTP=p.tp&&(p.side==='buy'?q.ask>=p.tp:q.bid<=p.tp);
-  if(!hitSL&&!hitTP)return;RISK_INFLIGHT[p.id]=1;
-  TradingProvider.close(p,hitSL?'sl':'tp').then(function(ok){if(ok){toast((hitSL?'Stop loss':'Take profit')+' hit — '+p.symbol,hitSL?'dn':'');renderStrip();chartDrawLines();chartDrawMarkers()}})
-   .finally(function(){setTimeout(function(){delete RISK_INFLIGHT[p.id]},3000)})})})
+  if(!hitSL&&!hitTP)return;RISK_INFLIGHT[sym]=1;
+  engineRequest('/v1/risk/check',{}).then(function(){return engineRefresh()}).then(function(ok){if(ok){renderStrip();chartDrawLines();chartDrawMarkers()}}).catch(function(){})
+   .finally(function(){delete RISK_INFLIGHT[sym]})})})
 }catch(e){}}
 function handleBiquoteStream(state,detail){
  FEEDS.biquote.state=state;FEEDS.biquote.error=state==='error'?String(detail&&detail.message||detail||'Biquote stream error'):'';
@@ -1478,6 +1479,7 @@ function rejectPending(a,o,why){o.state='REJECTED';o.status='REJECTED';o.reason=
  audit('engine','Pending Order Rejected',o.symbol,why);notify(a.userId,'warn','Pending order rejected',o.symbol+' '+why)}
 function engineTick(){
  DB.accounts.forEach(function(a){try{
+  if(a.serverManaged)return;
   var dk=todayKey();
   if(a.dayKey!==dk){
    var sw=0;
@@ -1491,7 +1493,7 @@ function engineTick(){
    if(p.ts>0){var S=SYMBOLS[p.symbol],dist=p.ts*S.pip;
     if(p.side==='buy'&&(q.bid-p.entry)>dist){var ns=+(q.bid-dist).toFixed(S.digits);if(!p.sl||ns>p.sl){p.sl=ns;a._tsUpd=true}}
     if(p.side==='sell'&&(p.entry-q.ask)>dist){var ns2=+(q.ask+dist).toFixed(S.digits);if(!p.sl||ns2<p.sl){p.sl=ns2;a._tsUpd=true}}}
-   var m=midPrice(q);
+   var m=p.side==='buy'?q.ask:q.bid;
    if(p.sl&&(p.side==='buy'?m<=p.sl:m>=p.sl)){closePosition(p,p.sl,'sl');audit('engine','SL Hit',p.symbol,'');return}
    if(p.tp&&(p.side==='buy'?m>=p.tp:m<=p.tp)){closePosition(p,p.tp,'tp');audit('engine','TP Hit',p.symbol,'')}});
   if(a._tsUpd){a._tsUpd=false;if(view==='charts'){renderStrip();chartDrawLines()}save()}
@@ -1525,8 +1527,12 @@ function engineTick(){
    if(M.profitPct>=ch2.profitPct&&a.days.length>=ch2.minDays)passCh(a)}
  }catch(e){}})}
 // Local paper trades only: server accounts are risk-managed by the cloud monitor.
-setInterval(function(){if(!user()||!useLocal())return;try{engineTick()}catch(e){}},1000);
-setInterval(function(){if(user()&&!useLocal())engineRefresh()},5000);
+setInterval(function(){if(!user())return;try{engineTick()}catch(e){}},1000);
+var lastRiskReconcile=0;
+function resumeEngineRisk(){if(!user()||DEMO_MODE||!CLOUD.ok||!CLOUD.hydrated)return;var now=Date.now();if(now-lastRiskReconcile<15000)return;lastRiskReconcile=now;engineRequest('/v1/risk/reconcile',{}).catch(function(){}).then(function(){return engineRefresh()})}
+setInterval(function(){if(user()&&!DEMO_MODE){engineRefresh();if(Date.now()-lastRiskReconcile>60000)resumeEngineRisk()}},5000);
+window.addEventListener('online',resumeEngineRisk);
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')resumeEngineRisk()});
 function failCh(a,why){var ch=a.ch;ch.status='FAILED';ch.failWhy=why;
  a.riskLock=why;
  closeAll(a,'admin');audit('engine','Risk Violation','account '+a.login,why);
@@ -1644,16 +1650,16 @@ var LocalProvider={
  getAccount:function(){return myAcc()},
  getPositions:function(){var a=myAcc();return a?accPositions(a):[]},
  getOrders:function(){var a=myAcc();return a?accOrders(a):[]},
- place:function(sym,side,lots,type,price,sl,tp){if(!localReady())return{err:'Cloud database is offline — trading is temporarily disabled'};var a=myAcc();if(!a)return{err:'No account'};var r=placeOrder(a,sym,side,lots,type,price,sl,tp);return r&&r.err?{err:r.err}:r},
- close:function(p,reason){if(!localReady())return false;var q=qt(p.symbol);if(!q)return false;var hl=holdLeftSec(p);if(hl>0&&(reason||'market')==='market'){toast('Minimum hold 1 minute — wait '+hl+'s','wn');return false}return closePosition(p,tradePrice(p.symbol,p.side,q),reason||'market')!==0},
- closeAll:function(){if(!localReady())return false;var a=myAcc();if(a)closeAll(a,'market');return true},
- modifyPosition:function(p,sl,tp,ts){if(!localReady())return false;p.sl=sl;p.tp=tp;p.ts=ts;save();return true},
- modifyOrder:function(o,price,sl,tp){if(!localReady())return false;o.price=price;o.sl=sl;o.tp=tp;o.log.push({t:Date.now(),s:'MODIFIED'});save();return true},
- cancelOrder:function(o){if(!localReady())return false;o.state='CANCELLED';o.status='CANCELLED';o.log.push({t:Date.now(),s:'CANCELLED'});save();return true}
+ place:function(sym,side,lots,type,price,sl,tp){if(!localReady())return{err:'Cloud database is offline — trading is temporarily disabled'};var a=myAcc();if(!a)return{err:'No account'};if(a.serverManaged){var original=a,id='offline-'+a.id;var local=DB.accounts.find(function(x){return x.id===id});if(!local){local=Object.assign({},a,{id:id,login:String(a.login)+' · Offline',serverManaged:false,sourceAccountId:a.id,createdAt:Date.now(),days:[],curve:[],ch:null,kind:'PAPER'});DB.accounts.push(local)}DB.activeAcc[a.userId]=id;a=local;toast('Offline paper account — server account #'+original.login+' remains monitored','wn')}var r=placeOrder(a,sym,side,lots,type,price,sl,tp);return r&&r.err?{err:r.err}:r},
+ close:function(p,reason){if(p.src==='server')return false;if(!localReady())return false;var q=qt(p.symbol);if(!q)return false;var hl=holdLeftSec(p);if(hl>0&&(reason||'market')==='market'){toast('Minimum hold 1 minute — wait '+hl+'s','wn');return false}return closePosition(p,tradePrice(p.symbol,p.side,q),reason||'market')!==0},
+ closeAll:function(){if(!localReady())return false;var a=myAcc();if(a&&a.serverManaged)return false;if(a)closeAll(a,'market');return true},
+ modifyPosition:function(p,sl,tp,ts){if(p.src==='server'||!localReady())return false;p.sl=sl;p.tp=tp;p.ts=ts;save();return true},
+ modifyOrder:function(o,price,sl,tp){var a=DB.accounts.find(function(x){return x.id===o.accId});if(a&&a.serverManaged||!localReady())return false;o.price=price;o.sl=sl;o.tp=tp;o.log.push({t:Date.now(),s:'MODIFIED'});save();return true},
+ cancelOrder:function(o){var a=DB.accounts.find(function(x){return x.id===o.accId});if(a&&a.serverManaged||!localReady())return false;o.state='CANCELLED';o.status='CANCELLED';o.log.push({t:Date.now(),s:'CANCELLED'});save();return true}
 };
 
 
-['place','close','closePartial','closeAll','modifyPosition','modifyOrder','cancelOrder'].forEach(function(k){var f=TradingProvider[k];TradingProvider[k]=function(){if(!useLocal())return f.apply(TradingProvider,arguments);if(k==='closePartial')return Promise.reject(new Error('Partial close is unavailable in demo mode'));var r=LocalProvider[k].apply(LocalProvider,arguments);if(k==='place'){if(!r||r.err)return Promise.reject(new Error((r&&r.err)||'Order failed'));return Promise.resolve({p:r.p||null,o:r.o||null,fill:r.p&&r.p.entry})}return Promise.resolve(r)}});
+['place','close','closePartial','closeAll','modifyPosition','modifyOrder','cancelOrder'].forEach(function(k){var f=TradingProvider[k];TradingProvider[k]=function(){var a=myAcc(),target=arguments[0];var serverTarget=k!=='place'&&((target&&target.src==='server')||(target&&DB.accounts.some(function(x){return x.id===target.accId&&x.serverManaged}))||(k==='closeAll'&&a&&a.serverManaged));if(serverTarget||(!useLocal()&&a&&a.serverManaged))return f.apply(TradingProvider,arguments);if(k==='closePartial')return Promise.reject(new Error('Partial close is unavailable in demo mode'));var r=LocalProvider[k].apply(LocalProvider,arguments);if(k==='place'){if(!r||r.err)return Promise.reject(new Error((r&&r.err)||'Order failed'));return Promise.resolve({p:r.p||null,o:r.o||null,fill:r.p&&r.p.entry})}return Promise.resolve(r)}});
 
 
 /* chart engine */

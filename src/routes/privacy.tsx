@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/privacy")({
+  head: () => ({ meta: [{ title: "سياسة الخصوصية | PLUTUS" }, { name: "description", content: "حماية بيانات الحساب والتداول والخصوصية في PLUTUS." }, { property: "og:title", content: "سياسة الخصوصية | PLUTUS" }, { property: "og:description", content: "حماية بيانات الحساب والتداول في PLUTUS." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: () => (
     <main
       dir="rtl"

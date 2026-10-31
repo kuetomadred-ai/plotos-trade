@@ -28,9 +28,9 @@ describe.skipIf(!connection)('database SL/TP settlement (rolled-back fixtures)',
       const [p] = await sql`select status,exit_price,realized_pnl,close_reason from public.pf_engine_positions where account_id='risk-test'`
       expect(p).toMatchObject({ status: 'CLOSED', exit_price: '4010.000000000000', realized_pnl: '10.00', close_reason: 'TP' })
       const [a] = await sql`select balance from public.pf_engine_accounts where id='risk-test'`
-      expect(a?.balance).toBe('10010.00')
+      expect(a?.['balance']).toBe('10010.00')
       const [l] = await sql`select count(*)::int as count from public.pf_engine_ledger where account_id='risk-test'`
-      expect(l?.count).toBe(1)
+      expect(l?.['count']).toBe(1)
     })
   })
   it('closes sell at exact SL 4010 rather than overshoot 4015', async () => {
@@ -60,7 +60,7 @@ describe.skipIf(!connection)('database SL/TP settlement (rolled-back fixtures)',
       await sql`update public.pf_engine_positions set take_profit=4011 where account_id='risk-test'`
       await reconcile(sql, 4015, 3995)
       const [p] = await sql`select status from public.pf_engine_positions where account_id='risk-test'`
-      expect(p?.status).toBe('OPEN')
+      expect(p?.['status']).toBe('OPEN')
     })
   })
   it('executes live buy SL immediately even during the first minute at exactly 3990', async () => {

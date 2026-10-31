@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import type React from "react";
 
 export const Route = createFileRoute("/terms")({
+  head: () => ({ meta: [{ title: "شروط الاستخدام | PLUTUS" }, { name: "description", content: "شروط استخدام حسابات PLUTUS وحماية بيانات الدخول." }, { property: "og:title", content: "شروط الاستخدام | PLUTUS" }, { property: "og:description", content: "شروط الحسابات وحماية بيانات الدخول." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: () => (
     <LegalPage title="شروط الاستخدام">
       <p>

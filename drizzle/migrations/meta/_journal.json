@@ -29,6 +29,13 @@
       "when": 1793077577112,
       "tag": "0003_inverted_execution_and_spread_bonus",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793441046497,
+      "tag": "0004_protected_candle_reconciliation",
+      "breakpoints": true
     }
   ]
 }

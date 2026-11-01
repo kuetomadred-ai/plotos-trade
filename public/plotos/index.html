@@ -1219,7 +1219,7 @@ function enterDemo(){
  if(PORTAL_ADMIN){toast('Demo trading login is available from the Trading Portal only','dn');return}
  var K='plutus_demo_device_v1',cred=null;try{cred=JSON.parse(localStorage.getItem(K)||'null')}catch(e){}
  function create(){var id=(crypto.randomUUID?crypto.randomUUID():'10000000-1000-4000-8000-100000000000'.replace(/[018]/g,function(c){return(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16)}));
-  return fetch('/api/public/demo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceId:id})}).then(function(r){return r.json().then(function(j){if(!r.ok||!j.email)throw new Error(j.error||'Demo unavailable');cred={email:j.email,password:j.password};localStorage.setItem(K,JSON.stringify(cred));return cred})})}
+  return fetch((window.PLUTUS_NATIVE?'https://gold-price-compass.lovable.app':'')+'/api/public/demo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceId:id})}).then(function(r){return r.json().then(function(j){if(!r.ok||!j.email)throw new Error(j.error||'Demo unavailable');cred={email:j.email,password:j.password};localStorage.setItem(K,JSON.stringify(cred));return cred})})}
  toast('Opening your demo account…','up');
  (cred?Promise.resolve(cred):create()).then(function(c){return doLogin(c.email,c.password).then(function(err){if(err&&/credentials/i.test(err)){localStorage.removeItem(K);return create().then(function(c2){return doLogin(c2.email,c2.password)})}return err})})
   .then(function(err){if(err)throw new Error(err);enterApp(false)})

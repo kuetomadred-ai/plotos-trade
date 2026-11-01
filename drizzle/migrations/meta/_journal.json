@@ -36,6 +36,13 @@
       "when": 1793441046497,
       "tag": "0004_protected_candle_reconciliation",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793556002090,
+      "tag": "0005_restrict_pf_firm_read",
+      "breakpoints": true
     }
   ]
 }

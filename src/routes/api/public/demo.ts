@@ -22,22 +22,22 @@ export const Route = createFileRoute("/api/public/demo")({
           });
           if (listError) throw new Error("Could not inspect demo identity");
           const existing = users.users.find((user) => user.email === email);
-          let userId = existing?.id;
+          // Never reset or hand out credentials for an existing identity: the
+          // deviceId is caller-supplied, so reuse would allow account takeover.
           if (existing) {
-            const { error } = await supabaseAdmin.auth.admin.updateUserById(existing.id, {
-              password,
-            });
-            if (error) throw new Error("Could not refresh demo identity");
-          } else {
-            const { data, error } = await supabaseAdmin.auth.admin.createUser({
-              email,
-              password,
-              email_confirm: true,
-              user_metadata: { full_name: "Demo Trader", demo: true, educational: true },
-            });
-            if (error || !data.user) throw new Error("Failed to create demo identity");
-            userId = data.user.id;
+            return Response.json(
+              { error: "Demo identity already exists" },
+              { status: 409, headers },
+            );
           }
+          const { data, error } = await supabaseAdmin.auth.admin.createUser({
+            email,
+            password,
+            email_confirm: true,
+            user_metadata: { full_name: "Demo Trader", demo: true, educational: true },
+          });
+          if (error || !data.user) throw new Error("Failed to create demo identity");
+          const userId = data.user.id;
           if (!userId) throw new Error("Demo identity is unavailable");
 
           const { data: account, error: accountError } = await supabaseAdmin

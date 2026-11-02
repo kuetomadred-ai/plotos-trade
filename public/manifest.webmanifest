@@ -1,0 +1,13 @@
+{
+  "name": "PLOTOS",
+  "short_name": "PLOTOS",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": [
+    { "src": "/plotos/assets/mt5-app-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/plotos/assets/mt5-app-icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

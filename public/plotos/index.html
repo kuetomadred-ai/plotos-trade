@@ -1277,7 +1277,7 @@ function flushTicks(){TICK_RAF=0;var pend=TICK_PENDING;TICK_PENDING={};var syms=
  if(Date.now()-QUOTE_CACHE_AT>5000)saveQuoteCache()}
 function scheduleFlush(){if(TICK_RAF)return;TICK_RAF=document.hidden?setTimeout(flushTicks,250):requestAnimationFrame(flushTicks)}
 function saveQuoteCache(){QUOTE_CACHE_AT=Date.now();try{var o={};SYIDS.forEach(function(s){var q=Q[s];if(q&&q.last>0)o[s]={symbol:s,bid:q.bid,ask:q.ask,mid:q.last,dayOpen:q.open,high:q.high,low:q.low,dayDiffPercent:q.dayDiffPercent,marketState:q.marketState,timestamp:new Date(q.t).toISOString(),stale:true}});localStorage.setItem(QUOTE_CACHE_KEY,JSON.stringify(o))}catch(e){}}
-function loadQuoteCache(){try{var o=JSON.parse(localStorage.getItem(QUOTE_CACHE_KEY)||'{}');Object.keys(o).forEach(function(s){if(!Q[s])applyBiquoteQuote(o[s],false)})}catch(e){}}
+function loadQuoteCache(){try{var o=JSON.parse(localStorage.getItem(QUOTE_CACHE_KEY)||'{}');Object.keys(o).forEach(function(s){if(!(Q[s]&&Q[s].last>0))applyBiquoteQuote(o[s],false)})}catch(e){}}
 function applyBiquoteTick(tick){
 	if(!applyBiquoteQuote(tick,true))return;
 	if(FEEDS.biquote.state!=='live'){FEEDS.biquote.state='live';FEEDS.biquote.error=''}

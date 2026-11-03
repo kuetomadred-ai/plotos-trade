@@ -1216,6 +1216,7 @@ function finishNativeAuthLink(rawUrl){
 }
 window.addEventListener('plutus:native-url',function(e){finishNativeAuthLink(e.detail)});
 function enterDemo(){
+ try{localStorage.removeItem('plotos_logged_out')}catch(e){}
  if(PORTAL_ADMIN){toast('Demo trading login is available from the Trading Portal only','dn');return}
  var K='plutus_demo_device_v1',cred=null;try{cred=JSON.parse(localStorage.getItem(K)||'null')}catch(e){}
  function create(){var id=(crypto.randomUUID?crypto.randomUUID():'10000000-1000-4000-8000-100000000000'.replace(/[018]/g,function(c){return(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16)}));
@@ -1233,7 +1234,7 @@ function enterLocalDemo(){
  if(!a){a=mkAccount(id,'t50','PAPER');a.login=90001;DB.accounts.push(a)}
  DB.activeAcc[id]=a.id;DB.session=id;CLOUD.authRole='TRADER';termSym=SYMBOLS.XAUUSD?'XAUUSD':(SYMBOLS.XAUUSD_HKN?'XAUUSD_HKN':(SYIDS[0]||'XAUUSD'));chart.sym=termSym;chart.tf='1m';DB.settings.lastSym=termSym;DB.settings.lastTf='1m';DB.settings.ind.rsi=false;save();audit('demo','Demo Login','account '+a.login,'Local paper account');enterApp(false)
 }
-function doLogout(){var u=user();var done=!DEMO_MODE&&CLOUD.ok?CLOUD.sb.auth.signOut():Promise.resolve();done.catch(function(){}).then(function(){if(u)audit(u.email,'Logout','user',DEMO_MODE?'Local demo':'Supabase Auth');DB.session=null;DEMO_MODE=false;save();closeDrawer();renderAuth();if(PREVIEW_DEMO&&!CLOUD.ok)cloudInit().catch(function(e){CLOUD.lastError=e;renderAuth('Sign in is unavailable. You can still open the demo.')})})}
+function doLogout(){var u=user();var done=!DEMO_MODE&&CLOUD.ok?CLOUD.sb.auth.signOut():Promise.resolve();done.catch(function(){}).then(function(){if(u)audit(u.email,'Logout','user',DEMO_MODE?'Local demo':'Supabase Auth');DB.session=null;DEMO_MODE=false;save();try{localStorage.setItem('plotos_logged_out','1')}catch(e){}closeDrawer();renderAuth();if(PREVIEW_DEMO&&!CLOUD.ok)cloudInit().catch(function(e){CLOUD.lastError=e;renderAuth('Sign in is unavailable. You can still open the demo.')})})}
 window.doLogout=doLogout;
 function isStaff(u){var r=CLOUD.authRole;return!!(u&&r&&(r==='ADMIN'||r==='RISK'||r==='FINANCE'||r==='SUPPORT'))}
 function canApprovePlanRequests(){return!!user()&&!DEMO_MODE&&(CLOUD.authRole==='ADMIN'||CLOUD.authRole==='FINANCE')}
@@ -4041,7 +4042,8 @@ function pipHTML(v,d){if(!(v>0))return'—';var s=pxf(v,d),n=d>=3?2:1;
  if(DB.settings.lastSym&&SYMBOLS[DB.settings.lastSym])termSym=DB.settings.lastSym;
  if(DB.settings.lastTf&&TFSEC[DB.settings.lastTf])chart.tf=DB.settings.lastTf;
  startFeeds();
- if(PREVIEW_DEMO){enterDemo()}
+ var RESUME=false;if(PREVIEW_DEMO){try{var dc=JSON.parse(localStorage.getItem('plutus_demo_device_v1')||'null'),su=DB.session&&DB.users.find(function(x){return x.id===DB.session});RESUME=localStorage.getItem('plotos_logged_out')==='1'||!!(su&&su.id!=='demo-trader-local'&&(!dc||String(su.email).toLowerCase()!==String(dc.email).toLowerCase()))}catch(e){}}
+ if(PREVIEW_DEMO&&!RESUME){enterDemo()}
  else{
  cloudInit().then(function(){return seed()}).then(function(){
   var nativeUrl=pendingNativeAuthUrl||window.__PLUTUS_NATIVE_URL;

@@ -1340,7 +1340,7 @@ function startFeeds(){
  if(!window.BiquoteAdapter){FEEDS.biquote.state='error';FEEDS.biquote.error='Biquote adapter unavailable';return}
   // Paint instantly from cached symbols + last known quotes while the network catches up.
   var early=cachedBiquoteSymbols();if(early.length&&!SYIDS.length){try{installBiquoteSymbols(early);loadQuoteCache();feedPaint();if(user())renderView()}catch(e){}}
-  if(SYIDS.length){BiquoteAdapter.subscribeTicks(SYIDS,applyBiquoteTick,handleBiquoteStream);BiquoteAdapter.getQuotes(SYIDS).then(function(qs){Object.keys(qs||{}).forEach(function(s){applyBiquoteQuote(qs[s])});feedPaint()}).catch(function(){})}
+  var EARLY_SUB=false;if(SYIDS.length){EARLY_SUB=true;BiquoteAdapter.subscribeTicks(SYIDS,applyBiquoteTick,handleBiquoteStream);BiquoteAdapter.getQuotes(SYIDS).then(function(qs){Object.keys(qs||{}).forEach(function(s){applyBiquoteQuote(qs[s])});feedPaint()}).catch(function(){})}
   if(!POLL_TIMER)POLL_TIMER=setInterval(pollQuotesFallback,2000);
   BiquoteAdapter.getSymbols().then(function(items){
   if(!Array.isArray(items)||!items.length)items=cachedBiquoteSymbols();
@@ -1349,7 +1349,7 @@ function startFeeds(){
  }).then(function(quotes){
    Object.keys(quotes||{}).forEach(function(sym){applyBiquoteQuote(quotes[sym])});
    refreshClosedMarketQuotes();
-  BiquoteAdapter.subscribeTicks(SYIDS,applyBiquoteTick,handleBiquoteStream);
+  if(!EARLY_SUB)BiquoteAdapter.subscribeTicks(SYIDS,applyBiquoteTick,handleBiquoteStream);
   if(user())renderView();feedPaint()
  }).catch(function(error){
   if(!SYIDS.length){var cached=cachedBiquoteSymbols();if(cached.length){installBiquoteSymbols(cached);feedPaint();if(user())renderView()}}

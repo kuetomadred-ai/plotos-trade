@@ -1267,12 +1267,35 @@ function applyBiquoteQuote(tick,fromStream){
 	if(previous.last>0&&next.last>0&&next.last!==previous.last)next.dirTrend=next.last>=previous.last?1:-1;
 	Q[sym]=next;FEEDS.biquote.last=Date.now();return true;
 }
+// Ticks are applied to Q immediately but painted once per animation frame, so bursts of ticks
+// never block the UI thread; risk checks still run on every changed symbol in that frame.
+var TICK_PENDING={},TICK_RAF=0,QUOTE_CACHE_KEY='plotos_quote_cache_v1',QUOTE_CACHE_AT=0;
+function flushTicks(){TICK_RAF=0;var pend=TICK_PENDING;TICK_PENDING={};var syms=Object.keys(pend);if(!syms.length)return;
+ syms.forEach(function(sym){try{chartTick(sym,pend[sym])}catch(e){}});
+ try{checkAlerts()}catch(e){}try{feedPaint()}catch(e){}
+ syms.forEach(function(sym){instantRiskCheck(sym)});
+ if(Date.now()-QUOTE_CACHE_AT>5000)saveQuoteCache()}
+function scheduleFlush(){if(TICK_RAF)return;TICK_RAF=document.hidden?setTimeout(flushTicks,250):requestAnimationFrame(flushTicks)}
+function saveQuoteCache(){QUOTE_CACHE_AT=Date.now();try{var o={};SYIDS.forEach(function(s){var q=Q[s];if(q&&q.last>0)o[s]={symbol:s,bid:q.bid,ask:q.ask,mid:q.last,dayOpen:q.open,high:q.high,low:q.low,dayDiffPercent:q.dayDiffPercent,marketState:q.marketState,timestamp:new Date(q.t).toISOString(),stale:true}});localStorage.setItem(QUOTE_CACHE_KEY,JSON.stringify(o))}catch(e){}}
+function loadQuoteCache(){try{var o=JSON.parse(localStorage.getItem(QUOTE_CACHE_KEY)||'{}');Object.keys(o).forEach(function(s){if(!(Q[s]&&Q[s].last>0))applyBiquoteQuote(o[s],false)})}catch(e){}}
 function applyBiquoteTick(tick){
 	if(!applyBiquoteQuote(tick,true))return;
 	if(FEEDS.biquote.state!=='live'){FEEDS.biquote.state='live';FEEDS.biquote.error=''}
- var sym=String(tick.symbol||'').toUpperCase();
- chartTick(sym,tick);checkAlerts();feedPaint();instantRiskCheck(sym)
+ TICK_PENDING[String(tick.symbol||'').toUpperCase()]=tick;scheduleFlush()
 }
+// Fallback polling keeps prices moving while the live stream is down or reconnecting.
+var POLL_BUSY=false,POLL_TIMER=0;
+function pollQuotesFallback(){
+ if(POLL_BUSY||document.hidden||!SYIDS.length||!window.BiquoteAdapter)return;
+ if(FEEDS.biquote.state==='live'&&Date.now()-(FEEDS.biquote.last||0)<8000)return;
+ POLL_BUSY=true;
+ var watched=SYIDS.slice(0,100);
+ BiquoteAdapter.getQuotes(watched).then(function(qs){Object.keys(qs||{}).forEach(function(s){var t=qs[s];if(t&&!t.symbol)t.symbol=s;if(applyBiquoteQuote(t,false)){TICK_PENDING[s]=t}});scheduleFlush()}).catch(function(){}).then(function(){POLL_BUSY=false})
+}
+function resumeQuotes(){if(!marketInitialized||!window.BiquoteAdapter)return;if(BiquoteAdapter.reconnectNow)BiquoteAdapter.reconnectNow();POLL_BUSY=false;pollQuotesFallback()}
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')resumeQuotes();else saveQuoteCache()});
+window.addEventListener('online',resumeQuotes);
+window.addEventListener('pageshow',resumeQuotes);
 // Instant SL/TP on every live tick (no timer delay). Server positions close via the engine at once;
 // the cloud cron remains the authority while the app is closed.
 var RISK_INFLIGHT={};
@@ -1315,6 +1338,10 @@ function globalStatus(){
 function startFeeds(){
  if(marketInitialized)return;marketInitialized=true;
  if(!window.BiquoteAdapter){FEEDS.biquote.state='error';FEEDS.biquote.error='Biquote adapter unavailable';return}
+  // Paint instantly from cached symbols + last known quotes while the network catches up.
+  var early=cachedBiquoteSymbols();if(early.length&&!SYIDS.length){try{installBiquoteSymbols(early);loadQuoteCache();feedPaint();if(user())renderView()}catch(e){}}
+  var EARLY_SUB=false;if(SYIDS.length){EARLY_SUB=true;BiquoteAdapter.subscribeTicks(SYIDS,applyBiquoteTick,handleBiquoteStream);BiquoteAdapter.getQuotes(SYIDS).then(function(qs){Object.keys(qs||{}).forEach(function(s){applyBiquoteQuote(qs[s])});feedPaint()}).catch(function(){})}
+  if(!POLL_TIMER)POLL_TIMER=setInterval(pollQuotesFallback,2000);
   BiquoteAdapter.getSymbols().then(function(items){
   if(!Array.isArray(items)||!items.length)items=cachedBiquoteSymbols();
   if(items.length)cacheBiquoteSymbols(items);
@@ -1322,7 +1349,7 @@ function startFeeds(){
  }).then(function(quotes){
    Object.keys(quotes||{}).forEach(function(sym){applyBiquoteQuote(quotes[sym])});
    refreshClosedMarketQuotes();
-  BiquoteAdapter.subscribeTicks(SYIDS,applyBiquoteTick,handleBiquoteStream);
+  if(!EARLY_SUB)BiquoteAdapter.subscribeTicks(SYIDS,applyBiquoteTick,handleBiquoteStream);
   if(user())renderView();feedPaint()
  }).catch(function(error){
   if(!SYIDS.length){var cached=cachedBiquoteSymbols();if(cached.length){installBiquoteSymbols(cached);feedPaint();if(user())renderView()}}

@@ -1184,7 +1184,7 @@ function resendVerification(email){
  var remaining=Math.ceil((AUTH_RESEND_NOT_BEFORE-Date.now())/1000);if(remaining>0)return Promise.resolve('Please wait '+remaining+' seconds before requesting another confirmation email.');
  return CLOUD.sb.auth.resend({type:'signup',email:email,options:{emailRedirectTo:authRedirectUrl()}}).then(function(r){
   if(r.error)throw r.error;AUTH_RESEND_NOT_BEFORE=Date.now()+60000;return null}).catch(function(e){return e&&e.message?e.message:String(e)})}
-function doLogin(email,pass){
+function doLogin(email,pass){try{localStorage.removeItem('plotos_logged_out')}catch(e){}
  if(!CLOUD.ok||!CLOUD.hydrated)return cloudInit().then(function(){return doLogin(email,pass)});
  return CLOUD.sb.auth.signInWithPassword({email:email,password:pass}).then(function(r){
   if(r.error){if(r.error.code==='email_not_confirmed'||/not confirmed/i.test(r.error.message||''))return'Email is not verified. Use Resend verification below.';throw r.error}

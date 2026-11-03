@@ -310,7 +310,22 @@
     return Promise.resolve();
   }
 
+  // Force an immediate reconnect (e.g. app returns to foreground or network comes back).
+  function reconnectNow() {
+    if (stream.stopped || !stream.symbols.length) return;
+    var c = stream.connection;
+    var connected = c && global.signalR && c.state === global.signalR.HubConnectionState.Connected;
+    if (connected) return;
+    stream.reconnectAttempt = 0;
+    if (c && !stream.starting) {
+      stream.connection = null;
+      try { c.stop(); } catch (ignore) {}
+    }
+    connect().catch(function () {});
+  }
+
   global.BiquoteAdapter = {
+    reconnectNow: reconnectNow,
     name: "Biquote",
     baseUrl: BASE_URL,
     getSymbols: getSymbols,

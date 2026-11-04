@@ -1499,7 +1499,7 @@ function closeAll(a,reason){var n=0;
   closePosition(p,midPrice(q),reason);n++});if(a._holdBlocked){a._holdBlocked=false;toast('Positions younger than 1 minute stay open','wn')}return n}
 function RiskEval(a){
  var M=accMetrics(a),R=DB.riskRules,ch=a.ch,out={state:'ACTIVE',dailyLossPct:M.dailyLossPct,ddPct:M.ddFromStartPct,ml:M.ml};
- if(M.um>0&&M.ml<R.stopoutLevel){out.state='BREACHED';out.why='stopout';return out}
+ if(M.um>0&&(M.ml<R.stopoutLevel||M.eq<=0)){out.state='BREACHED';out.why='stopout';return out}
  var managed=a.kind!=='PAPER'&&ch&&(ch.status==='ACTIVE'||ch.status==='FUNDED');
  if(managed){
   var warn=(R.warnAt||80)/100;

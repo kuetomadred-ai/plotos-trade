@@ -58,13 +58,13 @@ export const Route = createFileRoute("/api/public/demo")({
             const { error } = await supabaseAdmin.from("pf_engine_accounts").insert({
               id: candidate,
               user_id: userId,
-              initial_balance: 10000,
-              balance: 10000,
-              leverage: 100,
+              initial_balance: 1000,
+              balance: 1000,
+              leverage: 3000,
               program: "PAPER",
               phase: 1,
-              day_start_balance: 10000,
-              min_equity: 10000,
+              day_start_balance: 1000,
+              min_equity: 1000,
               status: "ACTIVE",
               challenge_status: "ACTIVE",
             });

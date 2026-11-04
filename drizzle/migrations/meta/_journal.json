@@ -43,6 +43,13 @@
       "when": 1793556002090,
       "tag": "0005_restrict_pf_firm_read",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793786343998,
+      "tag": "0006_stopout_all_accounts",
+      "breakpoints": true
     }
   ]
 }

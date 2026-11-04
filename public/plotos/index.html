@@ -1303,7 +1303,13 @@ function instantRiskCheck(sym){try{
  if(!user())return;
  engineTick();
  if(!cloudReady())return;var q=qt(sym);if(!q)return;
- DB.accounts.forEach(function(a){accPositions(a).forEach(function(p){
+ DB.accounts.forEach(function(a){
+  try{if(accPositions(a).some(function(p){return p.src==='server'})&&!RISK_INFLIGHT.__acc){
+   var M=accMetrics(a),ch=a.ch,init=+a.size||0,ds=+a.dayStartEq||init,breach=M.eq<=0;
+   if(!breach&&a.kind!=='PAPER'&&ch){if(ch.dailyLossPct>0&&M.eq<=ds*(1-ch.dailyLossPct/100))breach=true;if(ch.maxDDPct>0&&M.eq<=init*(1-ch.maxDDPct/100))breach=true}
+   if(breach){RISK_INFLIGHT.__acc=1;engineRequest('/v1/risk/check',{}).then(function(){return engineRefresh()}).then(function(){
+     var left=accPositions(a);if(left.length)return TradingProvider.closeAll().then(function(){return engineRefresh()})}).then(function(){renderStrip();paintTrade(true);chartDrawLines();toast('Stop out — all positions closed','dn')}).catch(function(){}).finally(function(){setTimeout(function(){delete RISK_INFLIGHT.__acc},3000)})}}}catch(e){}
+  accPositions(a).forEach(function(p){
   if(p.src!=='server'||p.symbol!==sym||RISK_INFLIGHT[sym])return;
   var hitSL=p.sl&&(p.side==='buy'?q.ask<=p.sl:q.bid>=p.sl),hitTP=p.tp&&(p.side==='buy'?q.ask>=p.tp:q.bid<=p.tp);
   if(!hitSL&&!hitTP)return;RISK_INFLIGHT[sym]=1;
@@ -1493,7 +1499,7 @@ function closeAll(a,reason){var n=0;
   closePosition(p,midPrice(q),reason);n++});if(a._holdBlocked){a._holdBlocked=false;toast('Positions younger than 1 minute stay open','wn')}return n}
 function RiskEval(a){
  var M=accMetrics(a),R=DB.riskRules,ch=a.ch,out={state:'ACTIVE',dailyLossPct:M.dailyLossPct,ddPct:M.ddFromStartPct,ml:M.ml};
- if(M.um>0&&M.ml<R.stopoutLevel){out.state='BREACHED';out.why='stopout';return out}
+ if(M.um>0&&(M.ml<R.stopoutLevel||M.eq<=0)){out.state='BREACHED';out.why='stopout';return out}
  var managed=a.kind!=='PAPER'&&ch&&(ch.status==='ACTIVE'||ch.status==='FUNDED');
  if(managed){
   var warn=(R.warnAt||80)/100;
@@ -3063,9 +3069,10 @@ function paintTrade(force){var a=myAcc();if(!a||view!=='trade'||!$('#posList'))r
  $('#tFree').textContent=money(M.free);
  $('#tMl').textContent=M.um>0?M.ml.toFixed(0)+'%':'—';
  var el=$('#posList');
- if(force||el.childElementCount!==pos.length){
-  el.innerHTML=pos.length?pos.map(posRow).join(''):'<div class="empty">No open positions — tap Charts to trade</div>';
-  bindPosButtons(el)}
+ var want=pos.length+(pos.length>=2?1:0);
+ if(force||el.childElementCount!==want){
+  el.innerHTML=pos.length?pos.map(posRow).join('')+(pos.length>=2?'<button id="posCloseAll" style="display:block;width:calc(100% - 28px);margin:10px 14px;padding:12px;border:1px solid var(--dn);background:transparent;color:var(--dn);font-weight:700;border-radius:8px;letter-spacing:.5px">CLOSE ALL POSITIONS ('+pos.length+')</button>':''):'<div class="empty">No open positions — tap Charts to trade</div>';
+  bindPosButtons(el);var cb=$('#posCloseAll');if(cb)cb.onclick=function(){$('#thCloseAll').onclick()}}
  pos.forEach(function(p){var q=Q[p.symbol];
   var px=q.bid>0?(p.side==='buy'?q.bid:q.ask):0;var pnl=px?pnlUSD(p,px):0;
   var pe=el.querySelector('[data-pnl="'+p.id+'"]');

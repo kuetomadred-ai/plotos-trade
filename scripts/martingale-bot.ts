@@ -9,7 +9,6 @@ const MINUTES = Number(process.argv[2] ?? 4);
 const LOT = 1; // fixed lot size — never doubled
 
 const sb = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
-let lots = LOT;
 let lastEntry: number | null = null;
 const end = Date.now() + MINUTES * 60_000;
 

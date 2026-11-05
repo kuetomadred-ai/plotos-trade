@@ -47,5 +47,7 @@ export async function refreshEngineQuotes(withCandles = false) {
   }
   const { error: riskError } = await supabaseAdmin.rpc('pf_engine_evaluate_all')
   if (riskError) throw new Error('Risk evaluation failed')
+  // Server-side bots act on fresh quotes after risk enforcement.
+  const { data: botActions } = await supabaseAdmin.rpc('pf_engine_bot_step')
   return { processed, failed, reconciliation }
 }

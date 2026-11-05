@@ -9,7 +9,7 @@ const SYMBOL = "XAUUSD";
 const STEP = 1; // dollars against us before adding another 1-lot trade
 const MINUTES = Number(process.argv[2] ?? 4);
 const LOT = 1; // fixed lot size — never doubled
-const TARGET = 100; // take profit and restart the cycle at +$100
+const TARGET = Number(process.env.TARGET ?? 100); // take profit and restart the cycle at +$100
 
 const sb = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
 

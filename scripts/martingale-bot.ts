@@ -45,8 +45,7 @@ async function buy() {
 }
 
 // Close every open position, then begin a fresh cycle.
-async function takeProfitAndRestart() {
-  const positions = await openPositions();
+async function takeProfitAndRestart(positions: { id: string }[]) {
   for (const p of positions) {
     await sb.rpc("pf_engine_close_position", {
       p_user_id: USER, p_position_id: p.id, p_request_id: crypto.randomUUID(),
@@ -74,8 +73,13 @@ while (Date.now() < end) {
   const profit = eq - startEquity;
   console.log(new Date().toISOString().slice(11, 19), "bid", q.bid, "balance", acc?.balance, "equity", eq.toFixed(2), "profit", profit.toFixed(2));
 
-  if (profit >= TARGET) {
-    await takeProfitAndRestart();
+  const open = await openPositions();
+
+  // Nothing open means the cycle baseline is stale (e.g. after an auto-refill) — re-baseline it.
+  if (open.length === 0 && lastEntry === null) startEquity = eq;
+
+  if (profit >= TARGET && open.length > 0) {
+    await takeProfitAndRestart(open);
     await new Promise((r) => setTimeout(r, 1500));
     continue;
   }

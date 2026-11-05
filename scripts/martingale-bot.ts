@@ -20,12 +20,11 @@ async function quote() {
 async function buy() {
   const { data, error } = await sb.rpc("pf_engine_place_order", {
     p_user_id: USER, p_account_id: ACCOUNT, p_request_id: crypto.randomUUID(),
-    p_symbol: SYMBOL, p_side: "buy", p_order_type: "MARKET", p_lots: Math.round(lots * 100) / 100,
+    p_symbol: SYMBOL, p_side: "buy", p_order_type: "MARKET", p_lots: LOT,
   });
   if (error) { console.log("rejected:", error.message); return; }
   lastEntry = Number((data as any).fill_price);
-  console.log(`BUY ${lots.toFixed(2)} @ ${lastEntry}`);
-  lots *= 2;
+  console.log(`BUY ${LOT.toFixed(2)} @ ${lastEntry}`);
 }
 
 while (Date.now() < end) {

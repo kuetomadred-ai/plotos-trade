@@ -4,11 +4,12 @@ import { createClient } from "@supabase/supabase-js";
 const ACCOUNT = "9982430";
 const USER = "4b2eb61d-0eb9-46a3-a09c-9684e88bc54c";
 const SYMBOL = "XAUUSD";
-const STEP = 1; // dollars against us before doubling
+const STEP = 1; // dollars against us before adding another 1-lot trade
 const MINUTES = Number(process.argv[2] ?? 4);
+const LOT = 1; // fixed lot size — never doubled
 
 const sb = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
-let lots = 0.1;
+let lots = LOT;
 let lastEntry: number | null = null;
 const end = Date.now() + MINUTES * 60_000;
 

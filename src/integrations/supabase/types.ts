@@ -149,6 +149,74 @@ export type Database = {
         }
         Relationships: []
       }
+      pf_engine_bots: {
+        Row: {
+          account_id: string
+          active: boolean
+          created_at: string
+          cycle: number
+          cycles_won: number
+          id: string
+          last_action: string | null
+          last_entry: number | null
+          lots: number
+          max_positions: number
+          side: string
+          step: number
+          symbol: string
+          target: number
+          total_profit: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_id: string
+          active?: boolean
+          created_at?: string
+          cycle?: number
+          cycles_won?: number
+          id?: string
+          last_action?: string | null
+          last_entry?: number | null
+          lots?: number
+          max_positions?: number
+          side?: string
+          step?: number
+          symbol?: string
+          target?: number
+          total_profit?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string
+          active?: boolean
+          created_at?: string
+          cycle?: number
+          cycles_won?: number
+          id?: string
+          last_action?: string | null
+          last_entry?: number | null
+          lots?: number
+          max_positions?: number
+          side?: string
+          step?: number
+          symbol?: string
+          target?: number
+          total_profit?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pf_engine_bots_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "pf_engine_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pf_engine_instruments: {
         Row: {
           contract_size: number
@@ -548,6 +616,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      pf_engine_bot_step: { Args: never; Returns: number }
       pf_engine_cancel_order: {
         Args: { p_order_id: string; p_user_id: string }
         Returns: {

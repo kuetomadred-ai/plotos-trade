@@ -57,6 +57,13 @@
       "when": 1793856236459,
       "tag": "0007_demo_auto_refill",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793860853179,
+      "tag": "0008_trading_bots",
+      "breakpoints": true
     }
   ]
 }

@@ -50,6 +50,13 @@
       "when": 1793786343998,
       "tag": "0006_stopout_all_accounts",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793856236459,
+      "tag": "0007_demo_auto_refill",
+      "breakpoints": true
     }
   ]
 }

@@ -64,6 +64,13 @@
       "when": 1793860853179,
       "tag": "0008_trading_bots",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1793947074817,
+      "tag": "0009_hedge_trap_bot",
+      "breakpoints": true
     }
   ]
 }

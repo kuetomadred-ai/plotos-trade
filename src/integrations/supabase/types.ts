@@ -161,6 +161,7 @@ export type Database = {
           last_entry: number | null
           lots: number
           max_positions: number
+          mode: string
           side: string
           step: number
           symbol: string
@@ -180,6 +181,7 @@ export type Database = {
           last_entry?: number | null
           lots?: number
           max_positions?: number
+          mode?: string
           side?: string
           step?: number
           symbol?: string
@@ -199,6 +201,7 @@ export type Database = {
           last_entry?: number | null
           lots?: number
           max_positions?: number
+          mode?: string
           side?: string
           step?: number
           symbol?: string

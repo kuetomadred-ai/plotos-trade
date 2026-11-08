@@ -78,6 +78,13 @@
       "when": 1794081984679,
       "tag": "0010_whipsaw_bot_mode",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1794169702356,
+      "tag": "0011_whipsaw_tp_sl_100",
+      "breakpoints": true
     }
   ]
 }

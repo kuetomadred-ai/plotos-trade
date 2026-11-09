@@ -160,6 +160,11 @@ export type Database = {
           last_action: string | null
           last_entry: number | null
           lots: number
+          range_high: number
+          range_low: number
+          exhausted_zones: string[]
+          dynamic_lot_enabled: boolean
+          lot_per_thousand: number
           max_positions: number
           mode: string
           side: string
@@ -180,6 +185,11 @@ export type Database = {
           last_action?: string | null
           last_entry?: number | null
           lots?: number
+          range_high?: number
+          range_low?: number
+          exhausted_zones?: string[]
+          dynamic_lot_enabled?: boolean
+          lot_per_thousand?: number
           max_positions?: number
           mode?: string
           side?: string
@@ -200,6 +210,11 @@ export type Database = {
           last_action?: string | null
           last_entry?: number | null
           lots?: number
+          range_high?: number
+          range_low?: number
+          exhausted_zones?: string[]
+          dynamic_lot_enabled?: boolean
+          lot_per_thousand?: number
           max_positions?: number
           mode?: string
           side?: string
@@ -620,6 +635,10 @@ export type Database = {
     }
     Functions: {
       pf_engine_bot_step: { Args: never; Returns: number }
+      pf_engine_update_bot_range: {
+        Args: { p_user_id: string; p_bot_id: string; p_high: number; p_low: number }
+        Returns: boolean
+      }
       pf_engine_cancel_order: {
         Args: { p_order_id: string; p_user_id: string }
         Returns: {

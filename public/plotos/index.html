@@ -725,6 +725,15 @@ html[dir="rtl"] #drawer{border-left:1px solid #292929}
 .dsep{margin:6px 0;background:#262626}
 @media(min-width:960px){body{justify-content:center}#app{max-width:480px;flex-direction:column}#bnav{display:flex!important}#shellMain{height:auto}}
 #chartEl{touch-action:none;overscroll-behavior:contain}
+#rangeBoxPanel{position:absolute;top:8px;right:8px;z-index:8;width:152px;padding:7px;background:rgba(8,8,8,.92);border:1px solid #343434;color:#eee;font:10px Arial,sans-serif}
+#rangeBoxPanel h4{font-size:10px;color:#8eb7ff;margin:0 0 5px;text-transform:uppercase;letter-spacing:.4px}
+#rangeBoxPanel .rb-row{display:flex;align-items:center;gap:3px;margin-top:4px}
+#rangeBoxPanel label{width:28px;color:#aaa;font-size:9px}
+#rangeBoxPanel input{width:76px;height:23px;background:#111;color:#fff;border:1px solid #444;padding:2px 4px;font:10px IBM Plex Mono,monospace}
+#rangeBoxPanel button{height:23px;min-width:23px;padding:0 4px;background:#222;color:#eee;border:1px solid #444;font-size:11px}
+#rangeBoxPanel .rb-save{width:100%;margin-top:6px;color:#fff;background:#1976e9;border-color:#1976e9;font-size:10px}
+#rangeBoxPanel .rb-bot{width:100%;margin-bottom:3px}
+#rangeBoxPanel .rb-note{margin-top:4px;color:#8d8d8d;font-size:8px;line-height:1.3}
 @media (orientation:landscape) and (max-height:520px){#bnav,.pre-nav,#marketNote{display:none!important}}
 @media(max-width:959px){
  #app.chartMode{max-width:480px;background:#000}
@@ -1713,7 +1722,7 @@ function ensureChartLib(){
    s.onerror=function(){try{s.remove()}catch(e){};next()};
    document.head.appendChild(s)})()});
  return libPromise}
-var chart={c:null,cs:null,ls:null,ar:null,is:{},oc:null,os:{},cur:null,candleArr:[],dataSym:'',dataTf:'',kSrc:'Biquote',lines:[],plRefs:[],ordLines:[],spreadLines:[],liveLines:{},sym:'',tf:'1m',style:'candles',crosshair:false,sessOn:false,dtOn:false,dragMode:false,oscH:140,token:0,following:true,gesture:null,drawRaf:0,levelPlacement:null,selectedPositionId:null};
+var chart={c:null,cs:null,ls:null,ar:null,is:{},oc:null,os:{},cur:null,candleArr:[],dataSym:'',dataTf:'',kSrc:'Biquote',lines:[],plRefs:[],ordLines:[],spreadLines:[],rangeRefs:[],liveLines:{},range:{botId:'',high:0,low:0},sym:'',tf:'1m',style:'candles',crosshair:false,sessOn:false,dtOn:false,dragMode:false,oscH:140,token:0,following:true,gesture:null,drawRaf:0,levelPlacement:null,selectedPositionId:null};
 function resetChartIfStale(){
  var el=$('#chartEl');
  if(chart.c&&(!el||!el.isConnected||chart.c._el!==el)){
@@ -2357,9 +2366,16 @@ function chartDrawMarkers(){if(!chart.cs)return;var C=DB.settings.chart||{};try{
   marks.push({time:t1,position:side?'aboveBar':'belowBar',color:h.pnl>=0?'#26A69A':'#EF5350',shape:h.pnl>=0?'circle':'square',text:'CLOSE '+(h.pnl>=0?'+':'')+Number(h.pnl||0).toFixed(2)})});
  marks.sort(function(x,y){return x.time-y.time});
  chart.cs.setMarkers(marks)}catch(e){}}
+function rangeBoxNumber(id){var el=document.getElementById(id),v=el?Number(el.value):NaN;return isFinite(v)&&v>0?v:0}
+function syncRangeBoxInputs(){var h=document.getElementById('rangeHigh'),l=document.getElementById('rangeLow'),b=document.getElementById('rangeBotId');if(h&&chart.range.high>0)h.value=chart.range.high;l&&chart.range.low>0&&(l.value=chart.range.low);b&&chart.range.botId&&(b.value=chart.range.botId)}
+function rangeBoxStep(kind,delta){var id=kind==='high'?'rangeHigh':'rangeLow',el=document.getElementById(id),v=Number(el&&el.value)||0;if(!(v>0)){var q=Q[chart.sym]||{};v=Number(q.last||q.bid||q.ask||0)}if(!(v>0))return;v=Math.max(0,Math.round((v+delta)*100)/100);if(el)el.value=v;chart.range[kind]=v;chartDrawLines()}
+function saveRangeBox(){var bot=(document.getElementById('rangeBotId')||{}).value||'',high=rangeBoxNumber('rangeHigh'),low=rangeBoxNumber('rangeLow');if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(bot)||!(high>low)){toast('Enter a valid bot UUID and HIGH greater than LOW','dn');return}if(!cloudReady()){toast('Trading server is unavailable','dn');return}chart.range={botId:bot,high:high,low:low};chartDrawLines();toast('Saving range…','');engineRequest('/v1/bot/range',{botId:bot,rangeHigh:high,rangeLow:low}).then(function(){try{localStorage.setItem('plotos_range_box',JSON.stringify(chart.range))}catch(e){}toast('Range saved to bot','up')}).catch(function(e){toast(e.message||'Range update failed','dn')})}
+function bindRangeBoxPanel(){var saved=null;try{saved=JSON.parse(localStorage.getItem('plotos_range_box')||'null')}catch(e){}if(saved&&saved.botId)chart.range=saved;syncRangeBoxInputs();var b=function(id,fn){var el=document.getElementById(id);if(el)el.onclick=fn};b('rangeHighDn',function(){rangeBoxStep('high',-1)});b('rangeHighUp',function(){rangeBoxStep('high',1)});b('rangeLowDn',function(){rangeBoxStep('low',-1)});b('rangeLowUp',function(){rangeBoxStep('low',1)});b('rangeSave',saveRangeBox);['rangeHigh','rangeLow','rangeBotId'].forEach(function(id){var el=document.getElementById(id);if(el)el.oninput=function(){if(id==='rangeHigh')chart.range.high=rangeBoxNumber(id);if(id==='rangeLow')chart.range.low=rangeBoxNumber(id);if(id==='rangeBotId')chart.range.botId=el.value;chartDrawLines()}})}
 function chartDrawLines(){if(!chart.cs)return;var C=DB.settings.chart||{};
  chart.lines.forEach(function(l){try{chart.cs.removePriceLine(l)}catch(e){}});chart.lines=[];chart.plRefs=[];
  chart.ordLines.forEach(function(l){try{chart.cs.removePriceLine(l)}catch(e){}});chart.ordLines=[];
+ chart.rangeRefs.forEach(function(l){try{chart.cs.removePriceLine(l)}catch(e){}});chart.rangeRefs=[];
+ if(chart.range.high>chart.range.low&&chart.range.low>0){try{chart.rangeRefs.push(chart.cs.createPriceLine({price:chart.range.high,color:'#26A69A',lineWidth:1,lineStyle:2,axisLabelVisible:true,title:'RANGE HIGH'}));chart.rangeRefs.push(chart.cs.createPriceLine({price:chart.range.low,color:'#EF5350',lineWidth:1,lineStyle:2,axisLabelVisible:true,title:'RANGE LOW'}))}catch(e){}}
  syncLivePriceLines();
  var a=myAcc();if(!a)return;
  if(C.tradePositions!==false)accPositions(a).filter(function(p){return p.symbol===chart.sym}).forEach(function(p){
@@ -2788,7 +2804,7 @@ function openCharts(){var el=$('#v-charts');
  '</div>'+ 
  (chart.sessOn?'<div class="sessrow" id="sessRow"></div>':'')+
  '<div id="chartBox"><span id="mBid" style="display:none"></span><span id="mAsk" style="display:none"></span><span id="mSymName" style="display:none"></span><span id="mSymState" style="display:none"></span><span id="mSymStatus" style="display:none"></span><div class="charttitle"><b id="chartTitleSym">'+termSym+'</b><span>▾</span><b id="chartTitleTf">'+(TFLBL[chart.tf]||chart.tf)+'</b><small id="chartTitleDesc">'+esc((SYMBOLS[termSym]||{}).desc||'')+'</small></div>'+
-   '<div id="mainWrap"><div id="chartEl"></div><canvas id="drawCv"></canvas><div id="marketNote" class="market-note"></div><button class="chart-live-btn" id="chartLive" aria-label="Return to current price" title="Current price">›</button><div id="chartLevelHint" class="chart-level-hint"></div>'+
+   '<div id="mainWrap"><div id="chartEl"></div><canvas id="drawCv"></canvas><div id="marketNote" class="market-note"></div><button class="chart-live-btn" id="chartLive" aria-label="Return to current price" title="Current price">›</button><div id="chartLevelHint" class="chart-level-hint"></div><div id="rangeBoxPanel"><h4>Range box bot</h4><input id="rangeBotId" class="rb-bot" placeholder="Bot UUID" inputmode="text" aria-label="Bot UUID"><div class="rb-row"><label for="rangeHigh">HIGH</label><button id="rangeHighDn" aria-label="Lower range high">−</button><input id="rangeHigh" inputmode="decimal" placeholder="0.00" aria-label="Range high"><button id="rangeHighUp" aria-label="Raise range high">+</button></div><div class="rb-row"><label for="rangeLow">LOW</label><button id="rangeLowDn" aria-label="Lower range low">−</button><input id="rangeLow" inputmode="decimal" placeholder="0.00" aria-label="Range low"><button id="rangeLowUp" aria-label="Raise range low">+</button></div><button id="rangeSave" class="rb-save">SAVE RANGE TO BOT</button><div class="rb-note">Applies only when the server bot mode is range_box.</div></div>'+
     '<div id="dSelBar" class="dselbar"><span class="grip">⋮⋮</span><b id="dSelName"></b>'+
      '<button id="dsEdit" aria-label="Edit object"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/></svg></button>'+
      '<button id="dsCopy" aria-label="Copy object"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="8" y="8" width="12" height="13" rx="1.5"/><path d="M16 8V4H4v13h4"/></svg></button>'+
@@ -2815,6 +2831,7 @@ function openCharts(){var el=$('#v-charts');
  $('#qSell').onclick=function(){quickTrade('sell')};
  $('#qBuy').onclick=function(){quickTrade('buy')};
  $('#chartLive').onclick=followLive;
+ bindRangeBoxPanel();
  if(chart.sessOn)paintSessions();
   chart.sym=termSym;chartLoad();renderStrip();paintMarketNote();
   $('#dsEdit').onclick=editSelected;$('#dsCopy').onclick=copySelected;$('#dsDel').onclick=deleteSelected;$('#dsClose').onclick=function(){selectDrawing(-1)};$('#dsUndo').onclick=undoDelete;

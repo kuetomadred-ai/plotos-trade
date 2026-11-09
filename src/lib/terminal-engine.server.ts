@@ -41,6 +41,23 @@ export async function handleTerminalRequest(request: Request, path: string) {
     const text = await request.text()
     if (text.length > 16384) return reply({ error: 'Request too large' }, 413)
     const body: unknown = JSON.parse(text || '{}')
+    if (path === 'v1/bot/range') {
+      const x = z.object({
+        botId: z.string().uuid(),
+        rangeHigh: z.number().finite().positive(),
+        rangeLow: z.number().finite().nonnegative(),
+      }).strict().parse(body)
+      if (x.rangeHigh <= x.rangeLow) return reply({ error: 'rangeHigh must be greater than rangeLow' }, 400)
+      const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
+      const { data, error } = await (supabaseAdmin as SupabaseClient).rpc('pf_engine_update_bot_range', {
+        p_user_id: userId,
+        p_bot_id: x.botId,
+        p_high: x.rangeHigh,
+        p_low: x.rangeLow,
+      })
+      if (error) return reply({ error: error.code === 'P0002' ? 'Bot not found' : error.message }, error.code === 'P0002' ? 404 : 400)
+      return reply({ ok: data === true, botId: x.botId, rangeHigh: x.rangeHigh, rangeLow: x.rangeLow })
+    }
     if (path === 'v1/risk/reconcile' || path === 'v1/risk/check') {
       z.object({}).strict().parse(body)
       const { data: positions, error } = await client.from('pf_engine_positions').select('symbol').eq('user_id', userId).eq('status', 'OPEN')

@@ -832,14 +832,16 @@ window.LANGS={en:'English',ar:'العربية'};
 window.LT={en:{Charts:'Charts',Trade:'Trade',Quotes:'Quotes',Profile:'Profile'},ar:{Charts:'الشارت',Trade:'التداول',Quotes:'الأسعار',Profile:'الملف'}};
 window.T=function(k){var lg='en';try{lg=(JSON.parse(localStorage.getItem('plotos_v1'))||{}).settings.lang||'en'}catch(e){}
  return(window.LT[lg]&&window.LT[lg][k])||window.LT.en[k]||k};
-(function(){var b=document.getElementById('errbar');
+ (function(){var b=document.getElementById('errbar');
+ function isTransientMarketError(value){return /WebSocket|SignalR|negotiate/i.test(String(value||''))}
  function show(m){if(b){b.style.display='block';b.textContent='PLUTUS: '+m}}
  b.onclick=function(){b.style.display='none'};
  window.addEventListener('error',function(e){var m=e.message||'error';
+  if(isTransientMarketError(m))return;
   if(e.error&&e.error.stack){var ls=String(e.error.stack).split('\n');if(ls[1])m+=' — '+ls[1].trim().slice(0,120)}
   show(m)});
- window.addEventListener('unhandledrejection',function(e){var r=e.reason,m=(r&&r.message)?r.message:String(r);show(m)});
-})();
+ window.addEventListener('unhandledrejection',function(e){var r=e.reason,m=(r&&r.message)?r.message:String(r);if(isTransientMarketError(m))return;show(m)});
+ })();
 </script>
 
 <script>

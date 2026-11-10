@@ -18,9 +18,12 @@ export const Route = createFileRoute("/")({
 });
 
 function App() {
+  const search = typeof window !== "undefined" ? window.location.search : "";
+  const iframeSrc = `/plotos/index.html${search || "?demo=1"}`;
+
   return (
     <iframe
-      src="/plotos/index.html?demo=1"
+      src={iframeSrc}
       title="PLUTUS"
       className="fixed inset-0 h-[100dvh] w-full border-0 bg-background"
       allow="clipboard-write; fullscreen"

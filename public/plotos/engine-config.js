@@ -5,9 +5,10 @@ window.PLUTUS_ENGINE_API_URL = window.PLUTUS_NATIVE ? "https://plotos-trade.lova
 // Leave blank until your own application server is deployed; payments then fail closed in native builds.
 window.PLUTUS_PAYMENTS_API_URL = "";
 // Public (publishable) cloud config so the web terminal keeps trades and sessions on the server.
-// The current demo project is the safe default. The original account can be selected explicitly.
+// The original hosted engine is the default because it owns the live quote worker.
 var plutusServerParams = new URLSearchParams(window.location.search);
-var plutusUseOriginal = plutusServerParams.get('server') === 'original' || plutusServerParams.get('account') === '9982430';
+var plutusUseManusProject = plutusServerParams.get('server') === 'manus';
+var plutusUseOriginal = !plutusUseManusProject;
 window.PLUTUS_SUPABASE_URL = plutusUseOriginal
   ? "https://lpfhorfuylryncpsvghv.supabase.co"
   : (window.PLUTUS_SUPABASE_URL || "https://jujjjvuspzfgrmeljljh.supabase.co");
